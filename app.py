@@ -1,0 +1,873 @@
+import streamlit as st
+import pandas as pd
+import openai
+from openai import OpenAI
+from datetime import datetime
+import os
+import json
+import numpy as np
+from io import BytesIO
+import sqlite3
+import re
+
+# Set page config
+st.set_page_config(
+    page_title="KRISPR Business Intelligence Chatbot",
+    page_icon="🧬",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# Custom CSS
+st.markdown("""
+<style>
+    .main-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        color: white;
+        text-align: center;
+    }
+    
+    .admin-header {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        color: white;
+        text-align: center;
+    }
+    
+    .chat-container {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        border-left: 4px solid #667eea;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .user-message {
+        background: #e3f2fd;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+        border-left: 3px solid #2196f3;
+    }
+    
+    .ai-message {
+        background: #f3e5f5;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        border-left: 3px solid #9c27b0;
+    }
+    
+    .success-box {
+        background: #d4edda;
+        border: 1px solid #c3e6cb;
+        padding: 1rem;
+        border-radius: 8px;
+        margin: 1rem 0;
+        color: #155724;
+    }
+    
+    .info-box {
+        background: #d1ecf1;
+        border: 1px solid #bee5eb;
+        padding: 1rem;
+        border-radius: 8px;
+        margin: 1rem 0;
+        color: #0c5460;
+    }
+    
+    .sql-box {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        padding: 1rem;
+        border-radius: 8px;
+        margin: 1rem 0;
+        font-family: monospace;
+        font-size: 0.9em;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+class KrisprChatbot:
+    def __init__(self):
+        self.client = None
+        self.db_path = "krispr_data.db"
+        self.data_summary = None
+        
+    def initialize_openai(self, api_key):
+        """Initialize OpenAI client"""
+        try:
+            self.client = OpenAI(api_key=api_key)
+            return True
+        except Exception as e:
+            st.error(f"Error initializing OpenAI: {str(e)}")
+            return False
+    
+    def clean_column_name(self, col_name):
+        """Clean column names for SQL compatibility"""
+        # Remove special characters and replace with underscores
+        clean_name = re.sub(r'[^\w\s]', '_', str(col_name))
+        # Replace spaces with underscores
+        clean_name = re.sub(r'\s+', '_', clean_name)
+        # Remove multiple underscores
+        clean_name = re.sub(r'_+', '_', clean_name)
+        # Remove leading/trailing underscores
+        clean_name = clean_name.strip('_')
+        # Ensure it starts with a letter
+        if clean_name and not clean_name[0].isalpha():
+            clean_name = 'col_' + clean_name
+        return clean_name or 'unnamed_column'
+    
+    def create_database_from_excel(self, uploaded_file):
+        """Convert Excel file to SQLite database"""
+        try:
+            # Remove existing database
+            if os.path.exists(self.db_path):
+                os.remove(self.db_path)
+            
+            # Create new database connection
+            conn = sqlite3.connect(self.db_path)
+            
+            # Read all sheets from Excel
+            xl_file = pd.ExcelFile(uploaded_file)
+            sheet_info = {}
+            
+            for sheet_name in xl_file.sheet_names:
+                # Read sheet
+                df = pd.read_excel(uploaded_file, sheet_name=sheet_name)
+                
+                # Clean data
+                df = df.dropna(how='all').dropna(axis=1, how='all')
+                
+                # Clean column names for SQL
+                original_columns = df.columns.tolist()
+                clean_columns = [self.clean_column_name(col) for col in original_columns]
+                df.columns = clean_columns
+                
+                # Create table name (clean sheet name)
+                table_name = self.clean_column_name(sheet_name)
+                
+                # Store the data in SQLite
+                df.to_sql(table_name, conn, if_exists='replace', index=False)
+                
+                # Store metadata
+                sheet_info[sheet_name] = {
+                    'table_name': table_name,
+                    'original_columns': original_columns,
+                    'clean_columns': clean_columns,
+                    'row_count': len(df),
+                    'column_count': len(df.columns)
+                }
+                
+                st.success(f"✅ Sheet '{sheet_name}' → Dataset '{table_name}' ({len(df):,} records)")
+            
+            conn.close()
+            
+            # Generate database summary
+            self.generate_database_summary(sheet_info)
+            
+            st.success(f"🎉 Data processed successfully with {len(xl_file.sheet_names)} datasets!")
+            st.info(f"📊 Data ready for intelligent analysis")
+            
+            return True
+            
+        except Exception as e:
+            st.error(f"Error creating database: {str(e)}")
+            return False
+    
+    def generate_database_summary(self, sheet_info):
+        """Generate database schema summary"""
+        conn = sqlite3.connect(self.db_path)
+        
+        summary = {
+            "database_path": self.db_path,
+            "total_tables": len(sheet_info),
+            "tables": {}
+        }
+        
+        for sheet_name, info in sheet_info.items():
+            table_name = info['table_name']
+            
+            # Get table schema
+            cursor = conn.execute(f"PRAGMA table_info({table_name})")
+            schema = cursor.fetchall()
+            
+            # Get sample data
+            cursor = conn.execute(f"SELECT * FROM {table_name} LIMIT 10")
+            sample_data = cursor.fetchall()
+            columns = [description[0] for description in cursor.description]
+            
+            # Get all unique values for potential product columns
+            product_columns = []
+            for col in info['clean_columns']:
+                if any(keyword in col.lower() for keyword in ['product', 'name', 'item', 'sku']):
+                    cursor = conn.execute(f"SELECT DISTINCT {col} FROM {table_name} WHERE {col} IS NOT NULL LIMIT 50")
+                    unique_values = [row[0] for row in cursor.fetchall()]
+                    product_columns.append({
+                        'column': col,
+                        'original_name': info['original_columns'][info['clean_columns'].index(col)],
+                        'unique_values': unique_values
+                    })
+            
+            summary["tables"][sheet_name] = {
+                "table_name": table_name,
+                "schema": schema,
+                "sample_data": sample_data,
+                "sample_columns": columns,
+                "row_count": info['row_count'],
+                "column_mapping": dict(zip(info['original_columns'], info['clean_columns'])),
+                "product_columns": product_columns
+            }
+        
+        conn.close()
+        self.data_summary = summary
+    
+    def get_database_info(self):
+        """Get database tables and columns for debugging"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            
+            # Get all tables
+            cursor = conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
+            tables = [row[0] for row in cursor.fetchall()]
+            
+            # Get columns for each table
+            table_info = {}
+            for table in tables:
+                cursor = conn.execute(f"PRAGMA table_info({table})")
+                columns = [row[1] for row in cursor.fetchall()]
+                table_info[table] = columns
+            
+            conn.close()
+            return table_info
+        except Exception as e:
+            return f"Error getting database info: {str(e)}"
+    
+    def execute_sql_query(self, query):
+        """Execute SQL query and return results"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            
+            # Clean the query one more time
+            clean_query = query.strip()
+            if clean_query.endswith(';;'):
+                clean_query = clean_query[:-1]  # Remove double semicolon
+            
+            cursor = conn.execute(clean_query)
+            results = cursor.fetchall()
+            columns = [description[0] for description in cursor.description]
+            conn.close()
+            
+            return {
+                "success": True,
+                "columns": columns,
+                "data": results,
+                "row_count": len(results),
+                "query_executed": clean_query
+            }
+        except Exception as e:
+            # Get database info for debugging
+            db_info = self.get_database_info()
+            return {
+                "success": False,
+                "error": str(e),
+                "query_attempted": query,
+                "database_info": db_info
+            }
+    
+    def get_ai_response(self, user_question):
+        """Get AI response using SQL database"""
+        if not self.client or not self.data_summary:
+            return "Please contact admin to upload data first."
+        
+        if not os.path.exists(self.db_path):
+            return "No data found. Please contact admin to upload data."
+        
+        try:
+            # Handle greetings and non-data questions first
+            question_lower = user_question.lower().strip()
+            greetings = ['hi', 'hello', 'hey', 'good morning', 'good afternoon', 'good evening']
+            identity_questions = ['who are you', 'what are you', 'introduce yourself']
+            
+            if any(greeting in question_lower for greeting in greetings):
+                return "Hi there! 👋 I'm KRISPR Business Intelligence Assistant. I'm here to help you analyze your business data and provide insights. How can I assist you today?"
+            
+            if any(identity in question_lower for identity in identity_questions):
+                return "I'm KRISPR Business Intelligence Assistant, your expert data analyst. I can help you understand your business data, find specific metrics, analyze trends, and provide actionable insights. What would you like to know about your data?"
+            
+            # For data questions, continue with SQL processing
+            # Prepare database context
+            context = f"""
+            You are KRISPR Business Intelligence Assistant, an expert data analyst. You have access to business data from multiple sources.
+            
+            DATABASE INFORMATION:
+            - Total Data Sources: {self.data_summary['total_tables']}
+            
+            AVAILABLE DATA SOURCES AND SCHEMA:
+            """
+            
+            # Add detailed table information
+            for sheet_name, table_info in self.data_summary['tables'].items():
+                context += f"""
+                
+            DATA SOURCE: {table_info['table_name']} (from "{sheet_name}")
+            - Records: {table_info['row_count']:,}
+            - Columns: {', '.join(table_info['sample_columns'])}
+            
+            Column Mapping (Original → System):
+            {json.dumps(table_info['column_mapping'], indent=2)}
+            
+            Sample Data from {table_info['table_name']}:
+            Columns: {table_info['sample_columns']}
+            """
+                for i, row in enumerate(table_info['sample_data'][:5]):
+                    context += f"\nRow {i+1}: {row}"
+                
+                # Add product information if available
+                if table_info['product_columns']:
+                    context += f"""
+            
+            Product Columns in {table_info['table_name']}:
+            """
+                    for prod_col in table_info['product_columns']:
+                        context += f"""
+            - {prod_col['column']} (original: {prod_col['original_name']})
+              Sample products: {prod_col['unique_values'][:10]}
+            """
+            
+            context += f"""
+            
+            INSTRUCTIONS:
+            1. You are a business intelligence assistant with access to comprehensive business data
+            2. When users ask questions, generate and execute queries to find precise answers
+            3. Use SELECT statements to query the data
+            4. For product searches, use LIKE with wildcards: WHERE column LIKE '%product_name%'
+            5. For week searches, look for columns containing 'week' or numeric week values
+            6. Always provide the exact query you would use
+            7. Based on the schema above, construct accurate queries
+            8. Use the clean column names (system-compatible) in your queries
+            9. When searching for products, be flexible with naming (use LIKE '%krispr%' AND LIKE '%rosemary%')
+            10. If looking for week 26, search for columns that might contain week numbers
+            11. NEVER mention "SQLite", "database", or technical terms - just provide business insights
+            
+            IMPORTANT: Format your query EXACTLY like this (no markdown, no code blocks):
+            SQL_QUERY: SELECT column FROM table WHERE condition;
+            EXPLANATION: [your explanation here]
+            
+            DO NOT use ```sql or ``` formatting. Just provide the plain query after "SQL_QUERY:"
+            
+            USER QUESTION: {user_question}
+            
+            Provide your response in this exact format:
+            SQL_QUERY: [clean query statement here]
+            EXPLANATION: [explanation of what you're looking for]
+            """
+            
+            # Get AI response with SQL query
+            response = self.client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": context},
+                    {"role": "user", "content": user_question}
+                ],
+                max_tokens=1500,
+                temperature=0.1
+            )
+            
+            ai_response = response.choices[0].message.content
+            
+            # Extract SQL query from response - handle multiple formats
+            sql_query = None
+            
+            # Look for SQL_QUERY: format
+            if "SQL_QUERY:" in ai_response:
+                sql_start = ai_response.find("SQL_QUERY:") + len("SQL_QUERY:")
+                sql_end = ai_response.find("EXPLANATION:", sql_start)
+                if sql_end == -1:
+                    sql_end = len(ai_response)
+                sql_query = ai_response[sql_start:sql_end].strip()
+            
+            # Clean up the SQL query - remove markdown formatting
+            if sql_query:
+                # Remove ```sql and ``` markers
+                sql_query = sql_query.replace("```sql", "").replace("```", "").strip()
+                # Remove any remaining markdown or HTML
+                sql_query = sql_query.replace("<code>", "").replace("</code>", "").strip()
+                # Remove any newlines and extra spaces
+                sql_query = " ".join(sql_query.split())
+                # Ensure it ends with semicolon
+                if sql_query and not sql_query.endswith(';'):
+                    sql_query += ';'
+            
+            # Execute the SQL query if found
+            if sql_query:
+                query_result = self.execute_sql_query(sql_query)
+                
+                if query_result["success"]:
+                    # Format the results
+                    if query_result["data"]:
+                        # Get final answer from AI
+                        final_context = f"""
+                        The query was executed successfully. Here are the results:
+                        
+                        Query: {sql_query}
+                        Results: {query_result['data']}
+                        Columns: {query_result['columns']}
+                        
+                        Based on these results, provide a clear, specific answer to the user's question: {user_question}
+                        
+                        If the results show the exact data they're looking for, provide the specific value.
+                        If no results were found, explain what was searched and suggest alternatives.
+                        
+                        IMPORTANT: 
+                        - Provide only a clean, direct answer
+                        - Do not mention queries, databases, or technical details
+                        - Use business language only
+                        - Be conversational and helpful
+                        """
+                        
+                        final_response = self.client.chat.completions.create(
+                            model="gpt-4o-mini",
+                            messages=[
+                                {"role": "system", "content": final_context},
+                                {"role": "user", "content": "Provide the final answer based on the results."}
+                            ],
+                            max_tokens=1000,
+                            temperature=0.1
+                        )
+                        
+                        return final_response.choices[0].message.content
+                    else:
+                        return "I couldn't find any matching data for your query. Could you please try rephrasing your question or check if the product name or time period is correct?"
+                else:
+                    return f"I couldn't find the requested information. This might be due to different naming conventions or the data not being available in the current dataset."
+            else:
+                # If no SQL query found, return the AI response directly
+                return ai_response
+            
+        except Exception as e:
+            return f"I apologize, but I encountered an issue while processing your request. Please try again or contact support if the problem persists."
+
+def check_admin_password(password):
+    """Check if the provided password matches admin password"""
+    try:
+        admin_password = st.secrets["ADMIN_PASSWORD"]
+        return password == admin_password
+    except:
+        st.error("Admin password not configured in secrets.toml")
+        return False
+
+def admin_login_page():
+    """Admin login page"""
+    st.markdown("""
+    <div class="admin-header">
+        <h1>🔐 Admin Login</h1>
+        <p>Administrator access for data management</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    with st.form("admin_login"):
+        st.header("🔑 Enter Admin Credentials")
+        password = st.text_input("Admin Password", type="password", placeholder="Enter admin password")
+        submitted = st.form_submit_button("Login as Admin", use_container_width=True)
+        
+        if submitted:
+            if password and check_admin_password(password):
+                st.session_state.admin_logged_in = True
+                st.session_state.current_page = "admin_panel"
+                st.rerun()
+            else:
+                st.error("❌ Invalid admin password")
+
+def admin_panel():
+    """Admin panel for data management"""
+    st.markdown("""
+    <div class="admin-header">
+        <h1>👨‍💼 Admin Panel</h1>
+        <p>Data Management & Configuration</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Logout button
+    col1, col2, col3 = st.columns([1, 1, 1])
+    with col3:
+        if st.button("🚪 Logout", use_container_width=True):
+            st.session_state.admin_logged_in = False
+            st.session_state.current_page = "home"
+            st.rerun()
+    
+    st.header("📊 Data Management")
+    
+    # Check if database exists
+    if os.path.exists("krispr_data.db"):
+        st.markdown("""
+        <div class="success-box">
+            <strong>✅ Data Status:</strong> Business data is ready for analysis
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Show current database info
+        try:
+            conn = sqlite3.connect("krispr_data.db")
+            cursor = conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
+            tables = [row[0] for row in cursor.fetchall()]
+            
+            st.info(f"📊 Available data sources: {len(tables)} datasets")
+            
+            # Show table details
+            total_rows = 0
+            st.subheader("📈 Data Overview")
+            for table in tables:
+                cursor = conn.execute(f"SELECT COUNT(*) FROM {table}")
+                row_count = cursor.fetchone()[0]
+                total_rows += row_count
+                st.text(f"• {table.replace('_', ' ')}: {row_count:,} records")
+            
+            st.success(f"📈 Total data: {total_rows:,} records across {len(tables)} datasets")
+            conn.close()
+            
+        except Exception as e:
+            st.warning(f"⚠️ Error reading data: {str(e)}")
+    else:
+        st.markdown("""
+        <div class="info-box">
+            <strong>ℹ️ No Data:</strong> Please upload an Excel file to get started
+        </div>
+        """, unsafe_allow_html=True)
+    
+    st.header("📁 Upload New Data")
+    
+    # File upload
+    uploaded_file = st.file_uploader(
+        "Upload Excel File", 
+        type=['xlsx', 'xls'],
+        help="Upload your Excel file - all sheets will be processed automatically"
+    )
+    
+    if uploaded_file:
+        try:
+            # Read all sheet names
+            xl_file = pd.ExcelFile(uploaded_file)
+            sheet_names = xl_file.sheet_names
+            
+            st.success(f"✅ File uploaded successfully!")
+            st.info(f"📊 Found {len(sheet_names)} sheet(s): {', '.join(sheet_names)}")
+            
+            # Preview of all sheets
+            st.subheader("📋 Workbook Preview")
+            for i, sheet_name in enumerate(sheet_names[:3]):  # Show first 3 sheets
+                with st.expander(f"Sheet: {sheet_name}"):
+                    preview_df = pd.read_excel(uploaded_file, sheet_name=sheet_name)
+                    st.write(f"📈 {len(preview_df):,} rows × {len(preview_df.columns)} columns")
+                    st.dataframe(preview_df.head(3), use_container_width=True)
+            
+            if len(sheet_names) > 3:
+                st.info(f"... and {len(sheet_names) - 3} more sheets")
+            
+            # Convert to database button
+            st.markdown("---")
+            col1, col2, col3 = st.columns([1, 2, 1])
+            with col2:
+                if st.button("💾 Process Data", use_container_width=True, type="primary"):
+                    with st.spinner("🔄 Processing your business data..."):
+                        if st.session_state.chatbot.create_database_from_excel(uploaded_file):
+                            st.balloons()
+                            st.success("🎉 Data processed successfully!")
+                            st.success("📊 All sheets are ready for analysis")
+                            st.info("💡 Users can now query data using the chatbot")
+                        
+        except Exception as e:
+            st.error(f"❌ Error processing file: {str(e)}")
+
+def chatbot_page():
+    """Main chatbot interface"""
+    st.markdown("""
+    <div class="main-header">
+        <h1>🧬 KRISPR Business Intelligence Chatbot</h1>
+        <p>Ask questions about your business data and get intelligent insights</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Initialize input key for clearing
+    if 'input_key' not in st.session_state:
+        st.session_state.input_key = 0
+    
+    # Check if database exists
+    if not os.path.exists("krispr_data.db"):
+        st.warning("⚠️ No database available. Please contact admin to upload data.")
+        return
+    
+    # Load database summary if not already loaded
+    if not st.session_state.chatbot.data_summary:
+        try:
+            conn = sqlite3.connect("krispr_data.db")
+            cursor = conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
+            tables = [row[0] for row in cursor.fetchall()]
+            conn.close()
+            # Don't show database status message
+        except:
+            st.error("❌ Error accessing database. Please contact admin.")
+            return
+    
+    # Main chat interface - full width
+    st.header("💬 Chat with Your Data")
+    
+    # Display chat history
+    for i, chat in enumerate(st.session_state.chat_history):
+        st.markdown(f"""
+        <div class="user-message">
+            <strong>💭 You:</strong> {chat['user']}
+        </div>
+        <div class="ai-message">
+            <strong>🧬 KRISPR AI:</strong><br>{chat['ai']}
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # User input
+    user_question = st.text_input(
+        "Ask a question about your data:", 
+        placeholder="e.g., What is media units sold of Krispr Premium Rosemary, 40g in week 26?",
+        key=f"user_input_{st.session_state.input_key}"
+    )
+    
+    # Beautiful buttons with proper spacing
+    st.markdown("<br>", unsafe_allow_html=True)  # Add some space
+    
+    col_send, col_clear, col_spacer = st.columns([2, 2, 6])
+    
+    with col_send:
+        send_button = st.button("🚀 Send", key="send_btn", type="primary", help="Ask your question", use_container_width=True)
+    
+    with col_clear:
+        clear_button = st.button("🗑️ Clear", key="clear_btn", type="secondary", help="Clear chat history", use_container_width=True)
+    
+    # Add custom CSS for beautiful buttons
+    st.markdown("""
+    <style>
+    /* Send Button - Beautiful gradient with hover effect */
+    div.stButton > button[data-testid="baseButton-primary"] {
+        background: linear-gradient(45deg, #667eea, #764ba2) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 12px !important;
+        padding: 12px 24px !important;
+        font-weight: 600 !important;
+        font-size: 16px !important;
+        letter-spacing: 0.5px !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 0 4px 14px 0 rgba(102, 126, 234, 0.3) !important;
+        width: 100% !important;
+        min-height: 50px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    
+    div.stButton > button[data-testid="baseButton-primary"]:hover {
+        background: linear-gradient(45deg, #5a6fd8, #6a42a0) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 20px 0 rgba(102, 126, 234, 0.4) !important;
+    }
+    
+    div.stButton > button[data-testid="baseButton-primary"]:active {
+        transform: translateY(0px) !important;
+    }
+    
+    /* Clear Button - Elegant secondary style */
+    div.stButton > button[data-testid="baseButton-secondary"] {
+        background: linear-gradient(45deg, #f093fb, #f5576c) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 12px !important;
+        padding: 12px 24px !important;
+        font-weight: 600 !important;
+        font-size: 16px !important;
+        letter-spacing: 0.5px !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 0 4px 14px 0 rgba(240, 147, 251, 0.3) !important;
+        width: 100% !important;
+        min-height: 50px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    
+    div.stButton > button[data-testid="baseButton-secondary"]:hover {
+        background: linear-gradient(45deg, #e885f0, #e04863) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 20px 0 rgba(240, 147, 251, 0.4) !important;
+    }
+    
+    div.stButton > button[data-testid="baseButton-secondary"]:active {
+        transform: translateY(0px) !important;
+    }
+    
+    /* Input Field - Modern styling */
+    div.stTextInput > div > div > input {
+        border-radius: 12px !important;
+        border: 2px solid #e1e5e9 !important;
+        padding: 14px 18px !important;
+        font-size: 16px !important;
+        transition: all 0.3s ease !important;
+        background-color: #fafbfc !important;
+    }
+    
+    div.stTextInput > div > div > input:focus {
+        border-color: #667eea !important;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+        background-color: white !important;
+    }
+    
+    /* Button container spacing */
+    .element-container:has(button) {
+        margin-top: 20px !important;
+    }
+    
+    /* Add gap between buttons */
+    div[data-testid="column"]:has(button) {
+        padding: 0 8px !important;
+    }
+    
+    /* Hide Streamlit default styling */
+    .stButton {
+        margin-bottom: 0 !important;
+    }
+    
+    /* Chat container improvements */
+    .user-message, .ai-message {
+        margin-bottom: 16px !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # Handle button clicks
+    if send_button and user_question:
+        with st.spinner("🧠 Thinking..."):
+            ai_response = st.session_state.chatbot.get_ai_response(user_question)
+            st.session_state.chat_history.append({
+                "user": user_question,
+                "ai": ai_response
+            })
+            # Clear input by incrementing key
+            st.session_state.input_key += 1
+        st.rerun()
+    
+    if clear_button:
+        st.session_state.chat_history = []
+        st.session_state.input_key += 1
+        st.rerun()
+
+def home_page():
+    """Home page with navigation"""
+    st.markdown("""
+    <div class="main-header">
+        <h1>🧬 KRISPR Business Intelligence</h1>
+        <p>Your AI-powered business data analysis platform</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.header("🚀 Welcome to KRISPR BI")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("""
+        ### 💬 Business Intelligence Chatbot
+        
+        Ask questions about your business data:
+        - "What is media units sold of Krispr Premium Rosemary, 40g in week 26?"
+        - "Which product has maximum sales?"
+        - "Show me trends by category"
+        - "Compare performance across weeks"
+        - "What is the CPA for specific products?"
+        
+        **Get instant, accurate insights from your data.**
+        """)
+        
+        if st.button("🚀 Go to Chatbot", use_container_width=True, type="primary"):
+            st.session_state.current_page = "chatbot"
+            st.rerun()
+    
+    with col2:
+        st.markdown("""
+        ### 👨‍💼 Admin Panel
+        
+        Administrative access for:
+        - Upload Excel files
+        - Manage business data
+        - Update datasets
+        - Configure system
+        
+        **Secure access for data management.**
+        """)
+        
+        if st.button("🔐 Admin Login", use_container_width=True):
+            st.session_state.current_page = "admin_login"
+            st.rerun()
+
+def main():
+    # Initialize session state
+    if 'current_page' not in st.session_state:
+        st.session_state.current_page = 'home'
+    
+    if 'admin_logged_in' not in st.session_state:
+        st.session_state.admin_logged_in = False
+    
+    if 'chatbot' not in st.session_state:
+        st.session_state.chatbot = KrisprChatbot()
+    
+    if 'chat_history' not in st.session_state:
+        st.session_state.chat_history = []
+    
+    # Initialize OpenAI
+    try:
+        api_key = st.secrets["OPENAI_API_KEY"]
+        if not st.session_state.get('openai_initialized', False):
+            if st.session_state.chatbot.initialize_openai(api_key):
+                st.session_state.openai_initialized = True
+    except Exception as e:
+        st.error("⚠️ OpenAI API key not found in secrets.toml")
+        st.stop()
+    
+    # Navigation
+    with st.sidebar:
+        st.header("🧭 Navigation")
+        
+        if st.button("🏠 Home", use_container_width=True):
+            st.session_state.current_page = "home"
+            st.rerun()
+        
+        if st.button("💬 Chatbot", use_container_width=True):
+            st.session_state.current_page = "chatbot"
+            st.rerun()
+        
+        if st.session_state.admin_logged_in:
+            if st.button("👨‍💼 Admin Panel", use_container_width=True):
+                st.session_state.current_page = "admin_panel"
+                st.rerun()
+        else:
+            if st.button("🔐 Admin Login", use_container_width=True):
+                st.session_state.current_page = "admin_login"
+                st.rerun()
+    
+    # Route to appropriate page
+    if st.session_state.current_page == "home":
+        home_page()
+    elif st.session_state.current_page == "chatbot":
+        chatbot_page()
+    elif st.session_state.current_page == "admin_login":
+        admin_login_page()
+    elif st.session_state.current_page == "admin_panel" and st.session_state.admin_logged_in:
+        admin_panel()
+    else:
+        st.session_state.current_page = "home"
+        home_page()
+
+if __name__ == "__main__":
+    main()
