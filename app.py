@@ -943,7 +943,7 @@ def home_page():
     st.markdown("""
     <div class="main-header">
         <h1>🔍 KRISPR Digital Analyst</h1>
-        <p>Your AI-powered business data analysis platform</p>
+        <p>Your AI-powered business data Intelligent platform</p>
     </div>
     """, unsafe_allow_html=True)
     
