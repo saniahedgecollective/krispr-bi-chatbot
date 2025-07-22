@@ -942,7 +942,7 @@ def home_page():
     """Home page with navigation"""
     st.markdown("""
     <div class="main-header">
-        <h1>🔍 KRISPR KRISPR Digital Analyst</h1>
+        <h1>🔍 KRISPR Digital Analyst</h1>
         <p>Your AI-powered business data analysis platform</p>
     </div>
     """, unsafe_allow_html=True)
