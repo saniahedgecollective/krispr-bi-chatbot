@@ -965,10 +965,8 @@ def home_page():
         Ask questions about your business data:
         - "What is media units sold of Krispr Premium Rosemary, 40g in week 26?"
         - "Which product has maximum sales?"
-        - "Compare performance across weeks"
-        - "What is the CPA for specific products?"
-        
-        **Get instant, accurate insights from your data.**
+        - "Compare performance across weeks"        
+
         """)
         
         if st.button("🚀 Go to Chatbot", use_container_width=True, type="primary"):
@@ -983,9 +981,7 @@ def home_page():
         - Upload Excel files
         - Manage business data
         - Update datasets
-        - Configure system
         
-        **Secure access for data management.**
         """)
         
         if st.button("🔐 Admin Login", use_container_width=True):
