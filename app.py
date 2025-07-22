@@ -942,12 +942,12 @@ def home_page():
     """Home page with navigation"""
     st.markdown("""
     <div class="main-header">
-        <h1>🔍 KRISPR Business Intelligence</h1>
+        <h1>🔍 KRISPR KRISPR Digital Analyst</h1>
         <p>Your AI-powered business data analysis platform</p>
     </div>
     """, unsafe_allow_html=True)
     
-    st.header("🚀 Welcome to KRISPR BI")
+    st.header("🚀 Welcome to KRISPR Digital Analyst")
     
     # Clean home page without system status
     st.markdown("""
