@@ -785,7 +785,7 @@ class KrisprChatbot:
             AVAILABLE DATA SOURCES AND SCHEMA:
             """
             
-            # Add detailed table information
+            # Add detailed table information with enhanced column guidance
             for sheet_name, table_info in self.data_summary['tables'].items():
                 context += f"""
                 
@@ -799,42 +799,71 @@ class KrisprChatbot:
             Sample Data from {table_info['table_name']}:
             Columns: {table_info['sample_columns']}
             """
-                for i, row in enumerate(table_info['sample_data'][:5]):
+                for i, row in enumerate(table_info['sample_data'][:3]):  # Show 3 rows instead of 5 for context
                     context += f"\nRow {i+1}: {row}"
+                
+                # Enhanced column analysis for media/organic detection
+                context += f"""
+            
+            IMPORTANT COLUMN ANALYSIS for {table_info['table_name']}:
+            """
+                # Look for media/organic related columns
+                media_organic_columns = []
+                for col in table_info['sample_columns']:
+                    if any(keyword in col.lower() for keyword in ['media', 'msv', 'organic', 'osv', 'units_sold', 'performance', 'sold']):
+                        media_organic_columns.append(col)
+                
+                if media_organic_columns:
+                    context += f"Media/Organic Related Columns: {', '.join(media_organic_columns)}\n"
+                
+                # Look for week columns
+                week_columns = [col for col in table_info['sample_columns'] if 'week' in col.lower()]
+                if week_columns:
+                    context += f"Week Columns: {', '.join(week_columns)}\n"
                 
                 # Add product information if available
                 if table_info['product_columns']:
                     context += f"""
-            
             Product Columns in {table_info['table_name']}:
             """
                     for prod_col in table_info['product_columns']:
                         context += f"""
             - {prod_col['column']} (original: {prod_col['original_name']})
-              Sample products: {prod_col['unique_values'][:10]}
+              Sample products: {prod_col['unique_values'][:5]}
             """
             
             context += f"""
             
             INSTRUCTIONS:
             1. You are a business intelligence assistant with access to comprehensive business data
-            2. When users ask questions, generate and execute queries to find precise answers
-            3. Use SELECT statements to query the data
-            4. For vendor/supplier questions, look for columns like 'vendor', 'supplier', 'source', etc.
-            5. For sales questions, look for columns like 'units', 'sales', 'quantity', 'amount', etc.
-            6. For week questions, look for columns containing 'week' or numeric week values
-            7. Always provide the exact query you would use
-            8. Based on the schema above, construct accurate queries
-            9. Use the clean column names (system-compatible) in your queries
-            10. When searching for week 26, use WHERE week = 26 or WHERE week_number = 26
-            11. Group results by vendor/supplier to show breakdown
-            12. NEVER mention "SQLite", "database", or technical terms - just provide business insights
+            2. When users ask questions, ALWAYS generate and execute queries to find precise answers
+            3. Use SELECT statements to query the data - NEVER give up without trying SQL first
+            4. For media vs organic comparisons, look for columns containing:
+               - 'media', 'MSV', 'Media_Units_Sold', 'media_sold', 'media_performance'
+               - 'organic', 'OSV', 'Org_Units_Sold', 'organic_sold', 'organic_performance'
+            5. For vendor/supplier questions, look for columns like 'vendor', 'supplier', 'source', etc.
+            6. For sales questions, look for columns like 'units', 'sales', 'quantity', 'amount', etc.
+            7. For week questions, look for columns containing 'week' or numeric week values
+            8. For weekly comparisons, use GROUP BY week to compare across different weeks
+            9. For performance comparisons, calculate totals, averages, or ratios as needed
+            10. ALWAYS try to find relevant data - be creative with column name variations
+            11. Use the clean column names (system-compatible) in your queries
+            12. When searching for week 25/26, use WHERE week = 25 or WHERE week_number = 25
+            13. For comparisons, use SUM(), AVG(), or direct column comparisons
+            14. Group results by vendor/week/product as needed for breakdowns
+            15. NEVER mention "SQLite", "database", or technical terms - just provide business insights
+            
+            IMPORTANT COMPARISON EXAMPLES:
+            - Media vs Organic: SELECT week, SUM(media_units_sold) as media, SUM(org_units_sold) as organic FROM table WHERE week = 25;
+            - Weekly Sales Comparison: SELECT week, SUM(units_sold) FROM table GROUP BY week ORDER BY week;
+            - Product Performance: SELECT product, SUM(units_sold) FROM table WHERE week BETWEEN 20 AND 25 GROUP BY product;
             
             IMPORTANT: Format your query EXACTLY like this (no markdown, no code blocks):
             SQL_QUERY: SELECT column FROM table WHERE condition;
             EXPLANATION: [your explanation here]
             
             DO NOT use ```sql or ``` formatting. Just provide the plain query after "SQL_QUERY:"
+            ALWAYS TRY TO GENERATE A QUERY - don't give generic "I couldn't find data" responses without trying SQL first.
             
             USER QUESTION: {user_question}
             
@@ -932,18 +961,32 @@ class KrisprChatbot:
                         
                         return final_response.choices[0].message.content
                     else:
-                        return "I couldn't find relevant data for that question. I specialize in product sales, weekly trends, and media or organic performance. Try asking: 'Which products had the highest sales last week?' or 'What's the media performance for week 26?'"
+                        return "I searched the data but couldn't find specific results for your query. Could you try rephrasing your question? For example: 'Compare media and organic units sold for week 25' or 'Show me weekly sales trends for the last 5 weeks'."
                 else:
-                    return "I couldn't find relevant data for that question. I specialize in product sales, weekly trends, and media or organic performance. Try asking: 'Which products had the highest sales last week?' or 'What's the media performance for week 26?'"
+                    # If query failed, try to provide helpful debugging info
+                    error_msg = query_result.get("error", "Unknown error")
+                    if "no such column" in error_msg.lower():
+                        available_tables = list(self.data_summary['tables'].keys()) if self.data_summary else []
+                        return f"I tried to analyze your request but had trouble finding the right data columns. Available datasets: {', '.join(available_tables)}. Could you try asking: 'What columns are available?' or rephrase your question with different terms?"
+                    else:
+                        return "I encountered a technical issue while analyzing your data. Could you try rephrasing your question? For media vs organic comparisons, try: 'Compare media and organic performance for week 25'"
             else:
-                # If no SQL query found, check if it's a general question
+                # If no SQL query found, provide more specific guidance
                 if any(word in user_question.lower() for word in ['weather', 'news', 'time', 'date', 'recipe', 'movie', 'music', 'sports', 'politics']):
-                    return "I couldn't find relevant data for that question. I specialize in product sales, weekly trends, and media or organic performance. Try asking: 'Which products had the highest sales last week?' or 'What's the media performance for week 26?'"
+                    return "I focus on business data analysis. I can help with questions like: 'Compare media and organic sales for week 25', 'Show weekly sales trends', or 'Which products performed best last week'."
                 else:
-                    return ai_response
+                    # Try to give more specific guidance based on their question
+                    if any(word in user_question.lower() for word in ['compare', 'comparison', 'vs', 'versus']):
+                        return "I can help with comparisons! Try asking: 'Compare media and organic units sold for week 25' or 'Compare sales performance across different weeks'. What specific metrics would you like to compare?"
+                    elif any(word in user_question.lower() for word in ['media', 'organic']):
+                        return "I can analyze media vs organic performance! Try: 'What were the media and organic units sold in week 25?' or 'Compare MSV and OSV for last week'. What specific week are you interested in?"
+                    elif any(word in user_question.lower() for word in ['week', 'weekly']):
+                        return "I can analyze weekly trends! Try: 'Show me sales by week' or 'Compare week 24 vs week 25 performance'. Which weeks would you like to compare?"
+                    else:
+                        return ai_response
             
         except Exception as e:
-            return "I couldn't find relevant data for that question. I specialize in product sales, weekly trends, and media or organic performance. Try asking: 'Which products had the highest sales last week?' or 'What's the media performance for week 26?'"
+            return "I had trouble processing your request. For media vs organic analysis, try: 'Compare media and organic performance for week 25'. For weekly comparisons, try: 'Show sales trends by week'. What specific analysis would you like?"
 
 def check_admin_password(password):
     """Check if the provided password matches admin password"""
