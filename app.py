@@ -13,38 +13,39 @@ import re
 # Set page config
 st.set_page_config(
     page_title="KRISPR Business Intelligence Chatbot",
-    page_icon="🔍",
+    page_icon="🌱",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Enhanced Custom CSS with modern gradients and animations
+# Fresh, Light CSS with KRISPR brand colors
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
     
-    /* Global Styles */
+    /* Global Styles - Fresh & Light */
     .stApp {
         font-family: 'Inter', sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+        background: linear-gradient(135deg, #f0f8f0 0%, #e8f5e8 30%, #f8fff8 70%, #e3f2fd 100%);
         min-height: 100vh;
     }
     
     .main .block-container {
         padding-top: 2rem;
         padding-bottom: 2rem;
-        background: rgba(255, 255, 255, 0.02);
-        backdrop-filter: blur(10px);
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(15px);
         border-radius: 20px;
         margin: 1rem;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(76, 175, 80, 0.1);
+        box-shadow: 0 8px 32px rgba(76, 175, 80, 0.1);
     }
     
-    /* Animated Header */
+    /* Fresh Header with Green Gradient */
     .main-header {
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 50%, rgba(240, 147, 251, 0.9) 100%);
-        padding: 3rem 2rem;
-        border-radius: 25px;
+        background: linear-gradient(135deg, rgba(76, 175, 80, 0.9) 0%, rgba(129, 199, 132, 0.8) 50%, rgba(165, 214, 167, 0.7) 100%);
+        padding: 2.5rem 2rem;
+        border-radius: 20px;
         margin-bottom: 2rem;
         color: white;
         text-align: center;
@@ -52,13 +53,13 @@ st.markdown("""
         border: 1px solid rgba(255, 255, 255, 0.2);
         position: relative;
         overflow: hidden;
-        box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
-        animation: headerGlow 3s ease-in-out infinite alternate;
+        box-shadow: 0 12px 30px rgba(76, 175, 80, 0.2);
+        animation: gentleGlow 4s ease-in-out infinite alternate;
     }
     
-    @keyframes headerGlow {
-        0% { box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3); }
-        100% { box-shadow: 0 25px 50px rgba(118, 75, 162, 0.4); }
+    @keyframes gentleGlow {
+        0% { box-shadow: 0 12px 30px rgba(76, 175, 80, 0.2); }
+        100% { box-shadow: 0 15px 35px rgba(129, 199, 132, 0.25); }
     }
     
     .main-header::before {
@@ -69,7 +70,7 @@ st.markdown("""
         width: 200%;
         height: 200%;
         background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-        animation: shimmer 3s infinite;
+        animation: shimmer 4s infinite;
         z-index: 1;
     }
     
@@ -81,50 +82,52 @@ st.markdown("""
     .main-header h1 {
         position: relative;
         z-index: 2;
-        font-size: 3rem;
+        font-size: 2.8rem;
         font-weight: 700;
-        margin-bottom: 0.5rem;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        margin-bottom: 0.8rem;
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
     }
     
     .main-header p {
         position: relative;
         z-index: 2;
-        font-size: 1.2rem;
-        font-weight: 300;
-        opacity: 0.9;
+        font-size: 1.1rem;
+        font-weight: 400;
+        opacity: 0.95;
     }
     
-    /* Admin Header */
+    /* Admin Header - Light Orange/Red */
     .admin-header {
-        background: linear-gradient(135deg, rgba(255, 107, 107, 0.9) 0%, rgba(238, 90, 82, 0.9) 100%);
+        background: linear-gradient(135deg, rgba(255, 87, 34, 0.8) 0%, rgba(255, 152, 0, 0.7) 100%);
         padding: 2rem;
-        border-radius: 25px;
+        border-radius: 20px;
         margin-bottom: 2rem;
         color: white;
         text-align: center;
         backdrop-filter: blur(20px);
         border: 1px solid rgba(255, 255, 255, 0.2);
-        box-shadow: 0 15px 35px rgba(255, 107, 107, 0.3);
+        box-shadow: 0 10px 25px rgba(255, 87, 34, 0.2);
     }
     
-    /* Modern Cards */
+    /* Light Feature Cards */
     .feature-card {
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(76, 175, 80, 0.2);
         padding: 2rem;
-        border-radius: 20px;
+        border-radius: 18px;
         margin-bottom: 2rem;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
         overflow: hidden;
+        box-shadow: 0 6px 20px rgba(76, 175, 80, 0.08);
     }
     
     .feature-card:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
-        border-color: rgba(255, 255, 255, 0.3);
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(76, 175, 80, 0.15);
+        border-color: rgba(76, 175, 80, 0.3);
+        background: rgba(255, 255, 255, 0.95);
     }
     
     .feature-card::before {
@@ -134,99 +137,101 @@ st.markdown("""
         left: -100%;
         width: 100%;
         height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-        transition: left 0.5s;
+        background: linear-gradient(90deg, transparent, rgba(76, 175, 80, 0.1), transparent);
+        transition: left 0.6s;
     }
     
     .feature-card:hover::before {
         left: 100%;
     }
     
-    /* Chat Containers */
+    /* Light Chat Containers */
     .chat-container {
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(15px);
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
         padding: 1.5rem;
         border-radius: 15px;
         margin-bottom: 1rem;
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(76, 175, 80, 0.15);
+        box-shadow: 0 4px 15px rgba(76, 175, 80, 0.05);
     }
     
     .user-message {
-        background: linear-gradient(135deg, rgba(33, 150, 243, 0.15) 0%, rgba(30, 136, 229, 0.15) 100%);
+        background: linear-gradient(135deg, rgba(33, 150, 243, 0.1) 0%, rgba(100, 181, 246, 0.08) 100%);
         padding: 1.2rem;
         border-radius: 15px;
         margin-bottom: 1rem;
-        border: 1px solid rgba(33, 150, 243, 0.2);
-        backdrop-filter: blur(10px);
-        animation: slideInLeft 0.5s ease-out;
+        border: 1px solid rgba(33, 150, 243, 0.15);
+        backdrop-filter: blur(8px);
+        animation: slideInLeft 0.4s ease-out;
+        color: #1565c0;
     }
     
     .ai-message {
-        background: linear-gradient(135deg, rgba(156, 39, 176, 0.15) 0%, rgba(142, 36, 170, 0.15) 100%);
+        background: linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(129, 199, 132, 0.08) 100%);
         padding: 1.2rem;
         border-radius: 15px;
         margin-bottom: 1rem;
-        border: 1px solid rgba(156, 39, 176, 0.2);
-        backdrop-filter: blur(10px);
-        animation: slideInRight 0.5s ease-out;
+        border: 1px solid rgba(76, 175, 80, 0.15);
+        backdrop-filter: blur(8px);
+        animation: slideInRight 0.4s ease-out;
+        color: #2e7d32;
     }
     
     @keyframes slideInLeft {
-        from { transform: translateX(-30px); opacity: 0; }
+        from { transform: translateX(-20px); opacity: 0; }
         to { transform: translateX(0); opacity: 1; }
     }
     
     @keyframes slideInRight {
-        from { transform: translateX(30px); opacity: 0; }
+        from { transform: translateX(20px); opacity: 0; }
         to { transform: translateX(0); opacity: 1; }
     }
     
-    /* Status Boxes */
+    /* Light Status Boxes */
     .success-box {
-        background: linear-gradient(135deg, rgba(76, 175, 80, 0.15) 0%, rgba(67, 160, 71, 0.15) 100%);
-        border: 1px solid rgba(76, 175, 80, 0.3);
+        background: linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(129, 199, 132, 0.08) 100%);
+        border: 1px solid rgba(76, 175, 80, 0.25);
         padding: 1.2rem;
-        border-radius: 15px;
+        border-radius: 12px;
         margin: 1rem 0;
-        color: #e8f5e8;
-        backdrop-filter: blur(10px);
+        color: #2e7d32;
+        backdrop-filter: blur(8px);
     }
     
     .info-box {
-        background: linear-gradient(135deg, rgba(33, 150, 243, 0.15) 0%, rgba(30, 136, 229, 0.15) 100%);
-        border: 1px solid rgba(33, 150, 243, 0.3);
+        background: linear-gradient(135deg, rgba(33, 150, 243, 0.1) 0%, rgba(100, 181, 246, 0.08) 100%);
+        border: 1px solid rgba(33, 150, 243, 0.25);
         padding: 1.2rem;
-        border-radius: 15px;
+        border-radius: 12px;
         margin: 1rem 0;
-        color: #e3f2fd;
-        backdrop-filter: blur(10px);
+        color: #1565c0;
+        backdrop-filter: blur(8px);
     }
     
-    /* Ultra-Modern Buttons */
+    /* Smaller, Fresh Primary Buttons */
     div.stButton > button[data-testid="baseButton-primary"] {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%) !important;
+        background: linear-gradient(135deg, #4caf50 0%, #66bb6a 50%, #81c784 100%) !important;
         color: white !important;
         border: none !important;
-        border-radius: 15px !important;
-        padding: 16px 32px !important;
+        border-radius: 10px !important;
+        padding: 10px 20px !important;
         font-weight: 600 !important;
-        font-size: 16px !important;
-        letter-spacing: 1px !important;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4) !important;
+        font-size: 14px !important;
+        letter-spacing: 0.5px !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3) !important;
         width: 100% !important;
-        min-height: 60px !important;
+        min-height: 40px !important;
         position: relative !important;
         overflow: hidden !important;
-        text-transform: uppercase !important;
+        text-transform: none !important;
     }
     
     div.stButton > button[data-testid="baseButton-primary"]:hover {
-        transform: translateY(-3px) scale(1.02) !important;
-        box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6) !important;
-        background: linear-gradient(135deg, #5a6fd8 0%, #6a42a0 50%, #e885f0 100%) !important;
+        transform: translateY(-2px) scale(1.02) !important;
+        box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4) !important;
+        background: linear-gradient(135deg, #43a047 0%, #5cb85c 50%, #72c472 100%) !important;
     }
     
     div.stButton > button[data-testid="baseButton-primary"]::before {
@@ -244,84 +249,87 @@ st.markdown("""
         left: 100% !important;
     }
     
-    /* Secondary Button */
+    /* Smaller Secondary Button */
     div.stButton > button[data-testid="baseButton-secondary"] {
-        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 50%, #ff9a9a 100%) !important;
+        background: linear-gradient(135deg, #ff7043 0%, #ff8a65 50%, #ffab91 100%) !important;
         color: white !important;
         border: none !important;
-        border-radius: 15px !important;
-        padding: 16px 32px !important;
+        border-radius: 10px !important;
+        padding: 10px 20px !important;
         font-weight: 600 !important;
-        font-size: 16px !important;
-        letter-spacing: 1px !important;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4) !important;
+        font-size: 14px !important;
+        letter-spacing: 0.5px !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 0 4px 15px rgba(255, 112, 67, 0.3) !important;
         width: 100% !important;
-        min-height: 60px !important;
+        min-height: 40px !important;
         position: relative !important;
         overflow: hidden !important;
-        text-transform: uppercase !important;
+        text-transform: none !important;
     }
     
     div.stButton > button[data-testid="baseButton-secondary"]:hover {
-        transform: translateY(-3px) scale(1.02) !important;
-        box-shadow: 0 15px 40px rgba(255, 107, 107, 0.6) !important;
-        background: linear-gradient(135deg, #e55a5a 0%, #d94d47 50%, #e88888 100%) !important;
+        transform: translateY(-2px) scale(1.02) !important;
+        box-shadow: 0 8px 25px rgba(255, 112, 67, 0.4) !important;
+        background: linear-gradient(135deg, #f4511e 0%, #ff7043 50%, #ff8a65 100%) !important;
     }
     
-    /* Regular buttons (like navigation) */
+    /* Regular Navigation buttons - Small & Clean */
     div.stButton > button:not([data-testid="baseButton-primary"]):not([data-testid="baseButton-secondary"]) {
-        background: rgba(255, 255, 255, 0.1) !important;
-        color: white !important;
-        border: 1px solid rgba(255, 255, 255, 0.2) !important;
-        border-radius: 12px !important;
-        padding: 12px 24px !important;
+        background: rgba(255, 255, 255, 0.8) !important;
+        color: #4caf50 !important;
+        border: 1px solid rgba(76, 175, 80, 0.3) !important;
+        border-radius: 8px !important;
+        padding: 8px 16px !important;
         font-weight: 500 !important;
-        backdrop-filter: blur(10px) !important;
+        backdrop-filter: blur(8px) !important;
         transition: all 0.3s ease !important;
         width: 100% !important;
+        min-height: 36px !important;
+        font-size: 14px !important;
     }
     
     div.stButton > button:not([data-testid="baseButton-primary"]):not([data-testid="baseButton-secondary"]):hover {
-        background: rgba(255, 255, 255, 0.2) !important;
-        border-color: rgba(255, 255, 255, 0.4) !important;
-        transform: translateY(-2px) !important;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2) !important;
+        background: rgba(76, 175, 80, 0.1) !important;
+        border-color: rgba(76, 175, 80, 0.5) !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 4px 15px rgba(76, 175, 80, 0.15) !important;
+        color: #2e7d32 !important;
     }
     
-    /* Input Field */
+    /* Light Input Field */
     div.stTextInput > div > div > input {
-        border-radius: 15px !important;
-        border: 1px solid rgba(255, 255, 255, 0.2) !important;
-        padding: 16px 20px !important;
-        font-size: 16px !important;
+        border-radius: 12px !important;
+        border: 1px solid rgba(76, 175, 80, 0.3) !important;
+        padding: 12px 16px !important;
+        font-size: 15px !important;
         transition: all 0.3s ease !important;
-        background: rgba(255, 255, 255, 0.1) !important;
-        backdrop-filter: blur(10px) !important;
-        color: white !important;
+        background: rgba(255, 255, 255, 0.9) !important;
+        backdrop-filter: blur(8px) !important;
+        color: #2e7d32 !important;
         font-weight: 500 !important;
     }
     
     div.stTextInput > div > div > input:focus {
-        border-color: rgba(102, 126, 234, 0.6) !important;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2) !important;
-        background: rgba(255, 255, 255, 0.15) !important;
+        border-color: rgba(76, 175, 80, 0.6) !important;
+        box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.15) !important;
+        background: rgba(255, 255, 255, 1) !important;
         outline: none !important;
     }
     
     div.stTextInput > div > div > input::placeholder {
-        color: rgba(255, 255, 255, 0.7) !important;
+        color: rgba(76, 175, 80, 0.7) !important;
     }
     
-    /* Sidebar Styling */
+    /* Light Sidebar */
     .css-1d391kg {
-        background: rgba(0, 0, 0, 0.2) !important;
-        backdrop-filter: blur(20px) !important;
-        border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+        backdrop-filter: blur(15px) !important;
+        border-right: 1px solid rgba(76, 175, 80, 0.1) !important;
     }
     
     .css-1d391kg h2 {
-        color: white !important;
+        color: #2e7d32 !important;
         font-weight: 600 !important;
     }
     
@@ -333,31 +341,45 @@ st.markdown("""
     /* Home page enhancements */
     .home-feature {
         text-align: center;
-        padding: 2rem 1rem;
+        padding: 1.8rem 1rem;
     }
     
     .home-feature h3 {
-        color: white;
-        font-size: 1.8rem;
+        color: #2e7d32;
+        font-size: 1.6rem;
         font-weight: 600;
         margin-bottom: 1rem;
     }
     
     .home-feature p {
-        color: rgba(255, 255, 255, 0.8);
-        font-size: 1rem;
+        color: #4caf50;
+        font-size: 0.95rem;
         line-height: 1.6;
         margin-bottom: 1.5rem;
+    }
+    
+    /* Text colors for better readability */
+    .stMarkdown, .stText {
+        color: #2e7d32;
     }
     
     /* Loading animations */
     @keyframes pulse {
         0%, 100% { opacity: 1; }
-        50% { opacity: 0.7; }
+        50% { opacity: 0.8; }
     }
     
     .loading {
         animation: pulse 2s infinite;
+    }
+    
+    /* Button spacing improvements */
+    .element-container:has(button) {
+        margin-top: 15px !important;
+    }
+    
+    div[data-testid="column"]:has(button) {
+        padding: 0 6px !important;
     }
 </style>
 
@@ -893,7 +915,7 @@ def admin_login_page():
     with st.form("admin_login"):
         st.header("🔑 Authentication Required")
         password = st.text_input("Admin Password", type="password", placeholder="Enter your secure password")
-        submitted = st.form_submit_button("🚀 Access Admin Panel", use_container_width=True)
+        submitted = st.form_submit_button("Access Admin Panel", use_container_width=True)
         
         if submitted:
             if password and check_admin_password(password):
@@ -1021,7 +1043,7 @@ def admin_panel():
             st.markdown("---")
             col1, col2, col3 = st.columns([1, 2, 1])
             with col2:
-                if st.button("💾 Process Data", use_container_width=True, type="primary"):
+                if st.button("Process Data", use_container_width=True, type="primary"):
                     with st.spinner("🔄 Processing your business data..."):
                         if st.session_state.chatbot.create_database_from_excel(uploaded_file):
                             st.balloons()
@@ -1037,8 +1059,8 @@ def chatbot_page():
     """Main chatbot interface"""
     st.markdown("""
     <div class="main-header">
-        <h1>🤖 AI Business Analyst</h1>
-        <p>Intelligent insights from your data</p>
+        <h1>🌱 KRISPR AI Analyst</h1>
+        <p>Fresh insights from your business data</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -1070,27 +1092,27 @@ def chatbot_page():
             <strong>💬 You:</strong> {chat['user']}
         </div>
         <div class="ai-message">
-            <strong>🤖 KRISPR AI:</strong><br>{chat['ai']}
+            <strong>🌱 KRISPR AI:</strong><br>{chat['ai']}
         </div>
         """, unsafe_allow_html=True)
     
     # User input
     user_question = st.text_input(
         "Search your business data:", 
-        placeholder="Ask about sales, products, performance, trends...",
+        placeholder="Ask about products, sales, performance, weekly trends...",
         key=f"user_input_{st.session_state.input_key}"
     )
     
-    # Beautiful buttons with proper spacing
+    # Smaller buttons
     st.markdown("<br>", unsafe_allow_html=True)
     
-    col_send, col_clear, col_spacer = st.columns([2, 2, 6])
+    col_send, col_clear, col_spacer = st.columns([1.5, 1.5, 7])
     
     with col_send:
-        send_button = st.button("🚀 Send", key="send_btn", type="primary", help="Send your question", use_container_width=True)
+        send_button = st.button("Send", key="send_btn", type="primary", help="Send your question", use_container_width=True)
     
     with col_clear:
-        clear_button = st.button("🗑️ Clear", key="clear_btn", type="secondary", help="Clear chat history", use_container_width=True)
+        clear_button = st.button("Clear", key="clear_btn", type="secondary", help="Clear chat history", use_container_width=True)
     
     # Handle button clicks and Enter key
     if (send_button or st.session_state.get('enter_pressed')) and user_question:
@@ -1111,11 +1133,11 @@ def chatbot_page():
         st.rerun()
 
 def home_page():
-    """Enhanced home page with modern design"""
+    """Enhanced home page with fresh design"""
     st.markdown("""
     <div class="main-header">
-        <h1>🔍 KRISPR Digital Analyst</h1>
-        <p>AI-powered business intelligence platform</p>
+        <h1>🌱 KRISPR Digital Analyst</h1>
+        <p>AI-powered insights for sustainable business growth</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -1132,7 +1154,7 @@ def home_page():
         </div>
         """, unsafe_allow_html=True)
         
-        if st.button("🚀 Start Analysis", use_container_width=True, type="primary", key="chatbot_btn"):
+        if st.button("Start Analysis", use_container_width=True, type="primary", key="chatbot_btn"):
             st.session_state.current_page = "chatbot"
             st.rerun()
     
@@ -1140,13 +1162,13 @@ def home_page():
         st.markdown("""
         <div class="feature-card">
             <div class="home-feature">
-                <h3>👨‍💼 Data Management</h3>
+                <h3>📊 Data Management</h3>
                 <p>Upload and manage your business datasets securely</p>
             </div>
         </div>
         """, unsafe_allow_html=True)
         
-        if st.button("🔐 Admin Access", use_container_width=True, key="admin_btn"):
+        if st.button("Admin Access", use_container_width=True, key="admin_btn"):
             st.session_state.current_page = "admin_login"
             st.rerun()
 
@@ -1179,13 +1201,13 @@ def main():
     
     # Navigation in sidebar
     with st.sidebar:
-        st.markdown("<h2 style='color: white; text-align: center; margin-bottom: 2rem;'>🧭 Navigation</h2>", unsafe_allow_html=True)
+        st.markdown("<h2 style='color: #2e7d32; text-align: center; margin-bottom: 2rem;'>🧭 Navigation</h2>", unsafe_allow_html=True)
         
         if st.button("🏠 Home", use_container_width=True):
             st.session_state.current_page = "home"
             st.rerun()
         
-        if st.button("🤖 AI Analyst", use_container_width=True):
+        if st.button("🌱 AI Analyst", use_container_width=True):
             st.session_state.current_page = "chatbot"
             st.rerun()
         
