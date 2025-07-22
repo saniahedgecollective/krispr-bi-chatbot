@@ -384,19 +384,44 @@ st.markdown("""
 </style>
 
 <script>
-// Enhanced Enter key functionality
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-        const input = document.querySelector('input[aria-label="Search your business data:"]');
-        if (input && document.activeElement === input && input.value.trim()) {
-            e.preventDefault();
-            const sendButton = document.querySelector('button[data-testid="baseButton-primary"]');
-            if (sendButton && sendButton.textContent.includes('Send')) {
-                sendButton.click();
+// Enhanced Enter key functionality with multiple selectors
+function setupEnterKeyHandler() {
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            // Try multiple ways to find the input field
+            let input = document.querySelector('input[placeholder*="business data"]') ||
+                       document.querySelector('input[placeholder*="Ask about"]') ||
+                       document.querySelector('input[placeholder*="Search"]') ||
+                       document.querySelector('div[data-testid="textInput"] input') ||
+                       document.querySelector('.stTextInput input');
+            
+            if (input && document.activeElement === input && input.value.trim()) {
+                e.preventDefault();
+                
+                // Try multiple ways to find the send button
+                let sendButton = document.querySelector('button[key="send_btn"]') ||
+                               document.querySelector('button[data-testid="baseButton-primary"]') ||
+                               document.querySelector('button:contains("Send")') ||
+                               Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Send'));
+                
+                if (sendButton) {
+                    sendButton.click();
+                }
             }
         }
-    }
+    });
+}
+
+// Run the setup immediately and also after a delay to ensure Streamlit has loaded
+setupEnterKeyHandler();
+setTimeout(setupEnterKeyHandler, 1000);
+setTimeout(setupEnterKeyHandler, 2000);
+
+// Also run when the page content changes (Streamlit re-renders)
+const observer = new MutationObserver(function(mutations) {
+    setupEnterKeyHandler();
 });
+observer.observe(document.body, { childList: true, subtree: true });
 </script>
 """, unsafe_allow_html=True)
 
