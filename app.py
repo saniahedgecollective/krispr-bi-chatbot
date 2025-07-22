@@ -916,21 +916,12 @@ def home_page():
     
     st.header("🚀 Welcome to KRISPR BI")
     
-    # Check database status for home page
-    db_ready, db_message = st.session_state.chatbot.check_database_exists_and_ready()
-    
-    if db_ready:
-        st.markdown(f"""
-        <div class="success-box">
-            <strong>✅ System Status:</strong> {db_message}
-        </div>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown(f"""
-        <div class="info-box">
-            <strong>ℹ️ System Status:</strong> {db_message}
-        </div>
-        """, unsafe_allow_html=True)
+    # Clean home page without system status
+    st.markdown("""
+    <div class="info-box">
+        <strong>🎯 Get Started:</strong> Choose an option below to access your business intelligence tools.
+    </div>
+    """, unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
     
