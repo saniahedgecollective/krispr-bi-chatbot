@@ -97,8 +97,13 @@ st.markdown("""
 class KrisprChatbot:
     def __init__(self):
         self.client = None
-        self.db_path = "krispr_data.db"
+        # Use data directory for persistent storage
+        self.data_dir = "data"
+        self.db_path = os.path.join(self.data_dir, "krispr_data.db")
         self.data_summary = None
+        
+        # Ensure data directory exists
+        os.makedirs(self.data_dir, exist_ok=True)
         
     def initialize_openai(self, api_key):
         """Initialize OpenAI client"""
@@ -108,6 +113,39 @@ class KrisprChatbot:
         except Exception as e:
             st.error(f"Error initializing OpenAI: {str(e)}")
             return False
+    
+    def check_database_exists_and_ready(self):
+        """Check if database exists and has data"""
+        try:
+            if not os.path.exists(self.db_path):
+                return False, "Database file not found"
+            
+            conn = sqlite3.connect(self.db_path)
+            
+            # Check if any tables exist
+            cursor = conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
+            tables = [row[0] for row in cursor.fetchall()]
+            
+            if not tables:
+                conn.close()
+                return False, "Database exists but has no tables"
+            
+            # Check if tables have data
+            total_rows = 0
+            for table in tables:
+                cursor = conn.execute(f"SELECT COUNT(*) FROM {table}")
+                row_count = cursor.fetchone()[0]
+                total_rows += row_count
+            
+            conn.close()
+            
+            if total_rows == 0:
+                return False, "Database exists but has no data"
+            
+            return True, f"Database ready with {len(tables)} tables and {total_rows:,} total records"
+            
+        except Exception as e:
+            return False, f"Database error: {str(e)}"
     
     def clean_column_name(self, col_name):
         """Clean column names for SQL compatibility"""
@@ -173,7 +211,8 @@ class KrisprChatbot:
             self.generate_database_summary(sheet_info)
             
             st.success(f"🎉 Data processed successfully with {len(xl_file.sheet_names)} datasets!")
-            st.info(f"📊 Data ready for intelligent analysis")
+            st.info(f"📊 Database saved to: {self.db_path}")
+            st.warning("⚠️ **IMPORTANT**: Commit the `data/` folder to GitHub to make this persistent!")
             
             return True
             
@@ -227,6 +266,76 @@ class KrisprChatbot:
         
         conn.close()
         self.data_summary = summary
+    
+    def load_existing_database_summary(self):
+        """Load database summary from existing database"""
+        try:
+            if not os.path.exists(self.db_path):
+                return False
+            
+            conn = sqlite3.connect(self.db_path)
+            
+            # Get all tables
+            cursor = conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
+            tables = [row[0] for row in cursor.fetchall()]
+            
+            if not tables:
+                conn.close()
+                return False
+            
+            # Generate summary for existing database
+            summary = {
+                "database_path": self.db_path,
+                "total_tables": len(tables),
+                "tables": {}
+            }
+            
+            for table_name in tables:
+                # Get table schema
+                cursor = conn.execute(f"PRAGMA table_info({table_name})")
+                schema = cursor.fetchall()
+                
+                # Get sample data
+                cursor = conn.execute(f"SELECT * FROM {table_name} LIMIT 10")
+                sample_data = cursor.fetchall()
+                columns = [description[0] for description in cursor.description]
+                
+                # Get row count
+                cursor = conn.execute(f"SELECT COUNT(*) FROM {table_name}")
+                row_count = cursor.fetchone()[0]
+                
+                # Create column mapping (simplified for existing DB)
+                column_mapping = {col: col for col in columns}
+                
+                # Get product columns
+                product_columns = []
+                for col in columns:
+                    if any(keyword in col.lower() for keyword in ['product', 'name', 'item', 'sku']):
+                        cursor = conn.execute(f"SELECT DISTINCT {col} FROM {table_name} WHERE {col} IS NOT NULL LIMIT 50")
+                        unique_values = [row[0] for row in cursor.fetchall()]
+                        product_columns.append({
+                            'column': col,
+                            'original_name': col,
+                            'unique_values': unique_values
+                        })
+                
+                summary["tables"][table_name] = {
+                    "table_name": table_name,
+                    "schema": schema,
+                    "sample_data": sample_data,
+                    "sample_columns": columns,
+                    "row_count": row_count,
+                    "column_mapping": column_mapping,
+                    "product_columns": product_columns
+                }
+            
+            conn.close()
+            self.data_summary = summary
+            return True
+            
+        except Exception as e:
+            st.error(f"Error loading existing database: {str(e)}")
+            return False
     
     def get_database_info(self):
         """Get database tables and columns for debugging"""
@@ -283,11 +392,18 @@ class KrisprChatbot:
     
     def get_ai_response(self, user_question):
         """Get AI response using SQL database"""
-        if not self.client or not self.data_summary:
-            return "Please contact admin to upload data first."
+        if not self.client:
+            return "Please contact admin to configure the system first."
         
-        if not os.path.exists(self.db_path):
-            return "No data found. Please contact admin to upload data."
+        # Check database status
+        db_ready, db_message = self.check_database_exists_and_ready()
+        if not db_ready:
+            return f"Database not ready: {db_message}. Please contact admin to upload data."
+        
+        # Load database summary if not already loaded
+        if not self.data_summary:
+            if not self.load_existing_database_summary():
+                return "Error loading database information. Please contact admin."
         
         try:
             # Handle greetings and non-data questions first
@@ -504,21 +620,24 @@ def admin_panel():
     
     st.header("📊 Data Management")
     
-    # Check if database exists
-    if os.path.exists("krispr_data.db"):
-        st.markdown("""
+    # Check database status
+    db_ready, db_message = st.session_state.chatbot.check_database_exists_and_ready()
+    
+    if db_ready:
+        st.markdown(f"""
         <div class="success-box">
-            <strong>✅ Data Status:</strong> Business data is ready for analysis
+            <strong>✅ Data Status:</strong> {db_message}
         </div>
         """, unsafe_allow_html=True)
         
         # Show current database info
         try:
-            conn = sqlite3.connect("krispr_data.db")
+            conn = sqlite3.connect(st.session_state.chatbot.db_path)
             cursor = conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
             tables = [row[0] for row in cursor.fetchall()]
             
             st.info(f"📊 Available data sources: {len(tables)} datasets")
+            st.info(f"📁 Database location: `{st.session_state.chatbot.db_path}`")
             
             # Show table details
             total_rows = 0
@@ -535,13 +654,27 @@ def admin_panel():
         except Exception as e:
             st.warning(f"⚠️ Error reading data: {str(e)}")
     else:
-        st.markdown("""
+        st.markdown(f"""
         <div class="info-box">
-            <strong>ℹ️ No Data:</strong> Please upload an Excel file to get started
+            <strong>ℹ️ Database Status:</strong> {db_message}
         </div>
         """, unsafe_allow_html=True)
     
     st.header("📁 Upload New Data")
+    
+    # Important note about persistence
+    st.markdown("""
+    <div class="info-box">
+        <strong>🔗 Making Data Persistent:</strong><br>
+        After uploading data, you must commit the <code>data/</code> folder to GitHub for persistence:
+        <br><br>
+        <code>
+        git add data/<br>
+        git commit -m "Update database"<br>
+        git push
+        </code>
+    </div>
+    """, unsafe_allow_html=True)
     
     # File upload
     uploaded_file = st.file_uploader(
@@ -581,6 +714,7 @@ def admin_panel():
                             st.success("🎉 Data processed successfully!")
                             st.success("📊 All sheets are ready for analysis")
                             st.info("💡 Users can now query data using the chatbot")
+                            st.warning("⚠️ **Don't forget to commit the `data/` folder to GitHub!**")
                         
         except Exception as e:
             st.error(f"❌ Error processing file: {str(e)}")
@@ -598,21 +732,29 @@ def chatbot_page():
     if 'input_key' not in st.session_state:
         st.session_state.input_key = 0
     
-    # Check if database exists
-    if not os.path.exists("krispr_data.db"):
-        st.warning("⚠️ No database available. Please contact admin to upload data.")
+    # Check database status
+    db_ready, db_message = st.session_state.chatbot.check_database_exists_and_ready()
+    
+    if not db_ready:
+        st.markdown(f"""
+        <div class="info-box">
+            <strong>⚠️ Database Status:</strong> {db_message}<br>
+            Please contact admin to upload data or check the database configuration.
+        </div>
+        """, unsafe_allow_html=True)
         return
+    
+    # Show database ready status
+    st.markdown(f"""
+    <div class="success-box">
+        <strong>✅ System Ready:</strong> {db_message}
+    </div>
+    """, unsafe_allow_html=True)
     
     # Load database summary if not already loaded
     if not st.session_state.chatbot.data_summary:
-        try:
-            conn = sqlite3.connect("krispr_data.db")
-            cursor = conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
-            tables = [row[0] for row in cursor.fetchall()]
-            conn.close()
-            # Don't show database status message
-        except:
-            st.error("❌ Error accessing database. Please contact admin.")
+        if not st.session_state.chatbot.load_existing_database_summary():
+            st.error("❌ Error loading database information. Please contact admin.")
             return
     
     # Main chat interface - full width
@@ -774,6 +916,22 @@ def home_page():
     
     st.header("🚀 Welcome to KRISPR BI")
     
+    # Check database status for home page
+    db_ready, db_message = st.session_state.chatbot.check_database_exists_and_ready()
+    
+    if db_ready:
+        st.markdown(f"""
+        <div class="success-box">
+            <strong>✅ System Status:</strong> {db_message}
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown(f"""
+        <div class="info-box">
+            <strong>ℹ️ System Status:</strong> {db_message}
+        </div>
+        """, unsafe_allow_html=True)
+    
     col1, col2 = st.columns(2)
     
     with col1:
@@ -855,6 +1013,18 @@ def main():
             if st.button("🔐 Admin Login", use_container_width=True):
                 st.session_state.current_page = "admin_login"
                 st.rerun()
+        
+        # Show database status in sidebar
+        st.markdown("---")
+        st.subheader("📊 System Status")
+        db_ready, db_message = st.session_state.chatbot.check_database_exists_and_ready()
+        if db_ready:
+            st.success("✅ Database Ready")
+        else:
+            st.warning("⚠️ Database Not Ready")
+        
+        st.text(f"DB Path: {st.session_state.chatbot.db_path}")
+        st.text(f"Exists: {'Yes' if os.path.exists(st.session_state.chatbot.db_path) else 'No'}")
     
     # Route to appropriate page
     if st.session_state.current_page == "home":
