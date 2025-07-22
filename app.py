@@ -1162,23 +1162,19 @@ def chatbot_page():
         </div>
         """, unsafe_allow_html=True)
     
-    # User input
-    user_question = st.text_input(
-        "Search your business data:", 
-        placeholder="Ask about products, sales, performance, weekly trends...",
-        key=f"user_input_{st.session_state.input_key}"
-    )
+    # User input with form for Enter key support
+    with st.form(key="chat_form", clear_on_submit=True):
+        user_question = st.text_input(
+            "Search your business data:", 
+            placeholder="Ask about products, sales, performance, weekly trends...",
+            key=f"user_input_{st.session_state.input_key}"
+        )
+        
+        # Hidden submit button (triggered by Enter key)
+        submitted = st.form_submit_button("Send", type="primary", use_container_width=True)
     
-    # Smaller buttons
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    col_send, col_spacer = st.columns([2, 6])
-    
-    with col_send:
-        send_button = st.button("Send", key="send_btn", type="primary", help="Send your question", use_container_width=True)
-    
-    # Handle button clicks and Enter key
-    if (send_button or st.session_state.get('enter_pressed')) and user_question:
+    # Handle form submission (Enter key or button click)
+    if submitted and user_question:
         with st.spinner("🧠 Analyzing your data..."):
             ai_response = st.session_state.chatbot.get_ai_response(user_question)
             st.session_state.chat_history.append({
@@ -1187,7 +1183,6 @@ def chatbot_page():
             })
             # Clear input by incrementing key
             st.session_state.input_key += 1
-            st.session_state.enter_pressed = False
         st.rerun()
 
 def home_page():
@@ -1243,9 +1238,6 @@ def main():
     
     if 'chat_history' not in st.session_state:
         st.session_state.chat_history = []
-    
-    if 'enter_pressed' not in st.session_state:
-        st.session_state.enter_pressed = False
     
     # Initialize OpenAI
     try:
