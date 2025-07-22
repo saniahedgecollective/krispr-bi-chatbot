@@ -18,80 +18,364 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS
+# Enhanced Custom CSS with modern gradients and animations
 st.markdown("""
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    /* Global Styles */
+    .stApp {
+        font-family: 'Inter', sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+        min-height: 100vh;
+    }
+    
+    .main .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+        background: rgba(255, 255, 255, 0.02);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        margin: 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    /* Animated Header */
     .main-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 2rem;
-        border-radius: 10px;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 50%, rgba(240, 147, 251, 0.9) 100%);
+        padding: 3rem 2rem;
+        border-radius: 25px;
         margin-bottom: 2rem;
         color: white;
         text-align: center;
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
+        animation: headerGlow 3s ease-in-out infinite alternate;
     }
     
+    @keyframes headerGlow {
+        0% { box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3); }
+        100% { box-shadow: 0 25px 50px rgba(118, 75, 162, 0.4); }
+    }
+    
+    .main-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        animation: shimmer 3s infinite;
+        z-index: 1;
+    }
+    
+    @keyframes shimmer {
+        0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+        100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+    }
+    
+    .main-header h1 {
+        position: relative;
+        z-index: 2;
+        font-size: 3rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .main-header p {
+        position: relative;
+        z-index: 2;
+        font-size: 1.2rem;
+        font-weight: 300;
+        opacity: 0.9;
+    }
+    
+    /* Admin Header */
     .admin-header {
-        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
-        padding: 1.5rem;
-        border-radius: 10px;
+        background: linear-gradient(135deg, rgba(255, 107, 107, 0.9) 0%, rgba(238, 90, 82, 0.9) 100%);
+        padding: 2rem;
+        border-radius: 25px;
         margin-bottom: 2rem;
         color: white;
         text-align: center;
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 15px 35px rgba(255, 107, 107, 0.3);
     }
     
+    /* Modern Cards */
+    .feature-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 2rem;
+        border-radius: 20px;
+        margin-bottom: 2rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+        border-color: rgba(255, 255, 255, 0.3);
+    }
+    
+    .feature-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        transition: left 0.5s;
+    }
+    
+    .feature-card:hover::before {
+        left: 100%;
+    }
+    
+    /* Chat Containers */
     .chat-container {
-        background: #f8f9fa;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(15px);
         padding: 1.5rem;
-        border-radius: 10px;
+        border-radius: 15px;
         margin-bottom: 1rem;
-        border-left: 4px solid #667eea;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     }
     
     .user-message {
-        background: #e3f2fd;
-        padding: 1rem;
-        border-radius: 8px;
-        margin-bottom: 0.5rem;
-        border-left: 3px solid #2196f3;
+        background: linear-gradient(135deg, rgba(33, 150, 243, 0.15) 0%, rgba(30, 136, 229, 0.15) 100%);
+        padding: 1.2rem;
+        border-radius: 15px;
+        margin-bottom: 1rem;
+        border: 1px solid rgba(33, 150, 243, 0.2);
+        backdrop-filter: blur(10px);
+        animation: slideInLeft 0.5s ease-out;
     }
     
     .ai-message {
-        background: #f3e5f5;
-        padding: 1rem;
-        border-radius: 8px;
+        background: linear-gradient(135deg, rgba(156, 39, 176, 0.15) 0%, rgba(142, 36, 170, 0.15) 100%);
+        padding: 1.2rem;
+        border-radius: 15px;
         margin-bottom: 1rem;
-        border-left: 3px solid #9c27b0;
+        border: 1px solid rgba(156, 39, 176, 0.2);
+        backdrop-filter: blur(10px);
+        animation: slideInRight 0.5s ease-out;
     }
     
+    @keyframes slideInLeft {
+        from { transform: translateX(-30px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @keyframes slideInRight {
+        from { transform: translateX(30px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    
+    /* Status Boxes */
     .success-box {
-        background: #d4edda;
-        border: 1px solid #c3e6cb;
-        padding: 1rem;
-        border-radius: 8px;
+        background: linear-gradient(135deg, rgba(76, 175, 80, 0.15) 0%, rgba(67, 160, 71, 0.15) 100%);
+        border: 1px solid rgba(76, 175, 80, 0.3);
+        padding: 1.2rem;
+        border-radius: 15px;
         margin: 1rem 0;
-        color: #155724;
+        color: #e8f5e8;
+        backdrop-filter: blur(10px);
     }
     
     .info-box {
-        background: #d1ecf1;
-        border: 1px solid #bee5eb;
-        padding: 1rem;
-        border-radius: 8px;
+        background: linear-gradient(135deg, rgba(33, 150, 243, 0.15) 0%, rgba(30, 136, 229, 0.15) 100%);
+        border: 1px solid rgba(33, 150, 243, 0.3);
+        padding: 1.2rem;
+        border-radius: 15px;
         margin: 1rem 0;
-        color: #0c5460;
+        color: #e3f2fd;
+        backdrop-filter: blur(10px);
     }
     
-    .sql-box {
-        background: #f8f9fa;
-        border: 1px solid #dee2e6;
-        padding: 1rem;
-        border-radius: 8px;
-        margin: 1rem 0;
-        font-family: monospace;
-        font-size: 0.9em;
+    /* Ultra-Modern Buttons */
+    div.stButton > button[data-testid="baseButton-primary"] {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 15px !important;
+        padding: 16px 32px !important;
+        font-weight: 600 !important;
+        font-size: 16px !important;
+        letter-spacing: 1px !important;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4) !important;
+        width: 100% !important;
+        min-height: 60px !important;
+        position: relative !important;
+        overflow: hidden !important;
+        text-transform: uppercase !important;
+    }
+    
+    div.stButton > button[data-testid="baseButton-primary"]:hover {
+        transform: translateY(-3px) scale(1.02) !important;
+        box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6) !important;
+        background: linear-gradient(135deg, #5a6fd8 0%, #6a42a0 50%, #e885f0 100%) !important;
+    }
+    
+    div.stButton > button[data-testid="baseButton-primary"]::before {
+        content: '' !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: -100% !important;
+        width: 100% !important;
+        height: 100% !important;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent) !important;
+        transition: left 0.5s !important;
+    }
+    
+    div.stButton > button[data-testid="baseButton-primary"]:hover::before {
+        left: 100% !important;
+    }
+    
+    /* Secondary Button */
+    div.stButton > button[data-testid="baseButton-secondary"] {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 50%, #ff9a9a 100%) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 15px !important;
+        padding: 16px 32px !important;
+        font-weight: 600 !important;
+        font-size: 16px !important;
+        letter-spacing: 1px !important;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4) !important;
+        width: 100% !important;
+        min-height: 60px !important;
+        position: relative !important;
+        overflow: hidden !important;
+        text-transform: uppercase !important;
+    }
+    
+    div.stButton > button[data-testid="baseButton-secondary"]:hover {
+        transform: translateY(-3px) scale(1.02) !important;
+        box-shadow: 0 15px 40px rgba(255, 107, 107, 0.6) !important;
+        background: linear-gradient(135deg, #e55a5a 0%, #d94d47 50%, #e88888 100%) !important;
+    }
+    
+    /* Regular buttons (like navigation) */
+    div.stButton > button:not([data-testid="baseButton-primary"]):not([data-testid="baseButton-secondary"]) {
+        background: rgba(255, 255, 255, 0.1) !important;
+        color: white !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        border-radius: 12px !important;
+        padding: 12px 24px !important;
+        font-weight: 500 !important;
+        backdrop-filter: blur(10px) !important;
+        transition: all 0.3s ease !important;
+        width: 100% !important;
+    }
+    
+    div.stButton > button:not([data-testid="baseButton-primary"]):not([data-testid="baseButton-secondary"]):hover {
+        background: rgba(255, 255, 255, 0.2) !important;
+        border-color: rgba(255, 255, 255, 0.4) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2) !important;
+    }
+    
+    /* Input Field */
+    div.stTextInput > div > div > input {
+        border-radius: 15px !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        padding: 16px 20px !important;
+        font-size: 16px !important;
+        transition: all 0.3s ease !important;
+        background: rgba(255, 255, 255, 0.1) !important;
+        backdrop-filter: blur(10px) !important;
+        color: white !important;
+        font-weight: 500 !important;
+    }
+    
+    div.stTextInput > div > div > input:focus {
+        border-color: rgba(102, 126, 234, 0.6) !important;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2) !important;
+        background: rgba(255, 255, 255, 0.15) !important;
+        outline: none !important;
+    }
+    
+    div.stTextInput > div > div > input::placeholder {
+        color: rgba(255, 255, 255, 0.7) !important;
+    }
+    
+    /* Sidebar Styling */
+    .css-1d391kg {
+        background: rgba(0, 0, 0, 0.2) !important;
+        backdrop-filter: blur(20px) !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+    
+    .css-1d391kg h2 {
+        color: white !important;
+        font-weight: 600 !important;
+    }
+    
+    /* Hide Streamlit elements */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    
+    /* Home page enhancements */
+    .home-feature {
+        text-align: center;
+        padding: 2rem 1rem;
+    }
+    
+    .home-feature h3 {
+        color: white;
+        font-size: 1.8rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+    
+    .home-feature p {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 1rem;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Loading animations */
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+    
+    .loading {
+        animation: pulse 2s infinite;
     }
 </style>
+
+<script>
+// Enhanced Enter key functionality
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        const input = document.querySelector('input[aria-label="Search your business data:"]');
+        if (input && document.activeElement === input && input.value.trim()) {
+            e.preventDefault();
+            const sendButton = document.querySelector('button[data-testid="baseButton-primary"]');
+            if (sendButton && sendButton.textContent.includes('Send')) {
+                sendButton.click();
+            }
+        }
+    }
+});
+</script>
 """, unsafe_allow_html=True)
 
 class KrisprChatbot:
@@ -601,15 +885,15 @@ def admin_login_page():
     """Admin login page"""
     st.markdown("""
     <div class="admin-header">
-        <h1>🔐 Admin Login</h1>
-        <p>Administrator access for data management</p>
+        <h1>🔐 Admin Access</h1>
+        <p>Secure data management portal</p>
     </div>
     """, unsafe_allow_html=True)
     
     with st.form("admin_login"):
-        st.header("🔑 Enter Admin Credentials")
-        password = st.text_input("Admin Password", type="password", placeholder="Enter admin password")
-        submitted = st.form_submit_button("Login as Admin", use_container_width=True)
+        st.header("🔑 Authentication Required")
+        password = st.text_input("Admin Password", type="password", placeholder="Enter your secure password")
+        submitted = st.form_submit_button("🚀 Access Admin Panel", use_container_width=True)
         
         if submitted:
             if password and check_admin_password(password):
@@ -617,14 +901,14 @@ def admin_login_page():
                 st.session_state.current_page = "admin_panel"
                 st.rerun()
             else:
-                st.error("❌ Invalid admin password")
+                st.error("❌ Invalid credentials")
 
 def admin_panel():
     """Admin panel for data management"""
     st.markdown("""
     <div class="admin-header">
-        <h1>👨‍💼 Admin Panel</h1>
-        <p>Data Management & Configuration</p>
+        <h1>👨‍💼 Admin Control Panel</h1>
+        <p>Data Management & System Configuration</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -659,8 +943,6 @@ def admin_panel():
     st.header("📊 Data Management")
     
     # Check database status
-    # db_ready, db_message = st.session_state.chatbot.check_database_exists_and_ready()
-    
     if db_ready:
         st.markdown(f"""
         <div class="success-box">
@@ -704,13 +986,7 @@ def admin_panel():
     st.markdown("""
     <div class="info-box">
         <strong>🔗 Making Data Persistent:</strong><br>
-        After uploading data, you must commit the <code>data/</code> folder to GitHub for persistence:
-        <br><br>
-        <code>
-        git add data/<br>
-        git commit -m "Update database"<br>
-        git push
-        </code>
+        After uploading data, commit the <code>data/</code> folder to GitHub for persistence.
     </div>
     """, unsafe_allow_html=True)
     
@@ -761,8 +1037,8 @@ def chatbot_page():
     """Main chatbot interface"""
     st.markdown("""
     <div class="main-header">
-        <h1>🔍 KRISPR Business Intelligence Chatbot</h1>
-        <p>Ask questions about your business data and get intelligent insights</p>
+        <h1>🤖 AI Business Analyst</h1>
+        <p>Intelligent insights from your data</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -787,145 +1063,38 @@ def chatbot_page():
             st.error("❌ Error loading data. Please contact admin.")
             return
     
-    # Main chat interface - full width
-    # Removed "Chat with Your Data" header as requested
-    
-    # Chat history container with new styling
-    st.markdown('<div class="chat-history">', unsafe_allow_html=True)
-    
     # Display chat history
     for i, chat in enumerate(st.session_state.chat_history):
         st.markdown(f"""
         <div class="user-message">
-            <strong>You:</strong> {chat['user']}
+            <strong>💬 You:</strong> {chat['user']}
         </div>
         <div class="ai-message">
-            <strong>KRISPR AI:</strong><br>{chat['ai']}
+            <strong>🤖 KRISPR AI:</strong><br>{chat['ai']}
         </div>
         """, unsafe_allow_html=True)
-    
-    st.markdown('</div>', unsafe_allow_html=True)
     
     # User input
     user_question = st.text_input(
         "Search your business data:", 
-        placeholder="e.g., What is media units sold of Krispr Premium Rosemary, 40g in week 26?",
+        placeholder="Ask about sales, products, performance, trends...",
         key=f"user_input_{st.session_state.input_key}"
     )
     
     # Beautiful buttons with proper spacing
-    st.markdown("<br>", unsafe_allow_html=True)  # Add some space
+    st.markdown("<br>", unsafe_allow_html=True)
     
     col_send, col_clear, col_spacer = st.columns([2, 2, 6])
     
     with col_send:
-        send_button = st.button("🚀 Send", key="send_btn", type="primary", help="Ask your question", use_container_width=True)
+        send_button = st.button("🚀 Send", key="send_btn", type="primary", help="Send your question", use_container_width=True)
     
     with col_clear:
         clear_button = st.button("🗑️ Clear", key="clear_btn", type="secondary", help="Clear chat history", use_container_width=True)
     
-    # Add custom CSS for beautiful buttons
-    st.markdown("""
-    <style>
-    /* Send Button - Beautiful gradient with hover effect */
-    div.stButton > button[data-testid="baseButton-primary"] {
-        background: linear-gradient(45deg, #667eea, #764ba2) !important;
-        color: white !important;
-        border: none !important;
-        border-radius: 12px !important;
-        padding: 12px 24px !important;
-        font-weight: 600 !important;
-        font-size: 16px !important;
-        letter-spacing: 0.5px !important;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        box-shadow: 0 4px 14px 0 rgba(102, 126, 234, 0.3) !important;
-        width: 100% !important;
-        min-height: 50px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }
-    
-    div.stButton > button[data-testid="baseButton-primary"]:hover {
-        background: linear-gradient(45deg, #5a6fd8, #6a42a0) !important;
-        transform: translateY(-2px) !important;
-        box-shadow: 0 6px 20px 0 rgba(102, 126, 234, 0.4) !important;
-    }
-    
-    div.stButton > button[data-testid="baseButton-primary"]:active {
-        transform: translateY(0px) !important;
-    }
-    
-    /* Clear Button - Elegant secondary style */
-    div.stButton > button[data-testid="baseButton-secondary"] {
-        background: linear-gradient(45deg, #f093fb, #f5576c) !important;
-        color: white !important;
-        border: none !important;
-        border-radius: 12px !important;
-        padding: 12px 24px !important;
-        font-weight: 600 !important;
-        font-size: 16px !important;
-        letter-spacing: 0.5px !important;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        box-shadow: 0 4px 14px 0 rgba(240, 147, 251, 0.3) !important;
-        width: 100% !important;
-        min-height: 50px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }
-    
-    div.stButton > button[data-testid="baseButton-secondary"]:hover {
-        background: linear-gradient(45deg, #e885f0, #e04863) !important;
-        transform: translateY(-2px) !important;
-        box-shadow: 0 6px 20px 0 rgba(240, 147, 251, 0.4) !important;
-    }
-    
-    div.stButton > button[data-testid="baseButton-secondary"]:active {
-        transform: translateY(0px) !important;
-    }
-    
-    /* Input Field - Modern styling */
-    div.stTextInput > div > div > input {
-        border-radius: 12px !important;
-        border: 2px solid #e1e5e9 !important;
-        padding: 14px 18px !important;
-        font-size: 16px !important;
-        transition: all 0.3s ease !important;
-        background-color: #fafbfc !important;
-    }
-    
-    div.stTextInput > div > div > input:focus {
-        border-color: #667eea !important;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
-        background-color: white !important;
-    }
-    
-    /* Button container spacing */
-    .element-container:has(button) {
-        margin-top: 20px !important;
-    }
-    
-    /* Add gap between buttons */
-    div[data-testid="column"]:has(button) {
-        padding: 0 8px !important;
-    }
-    
-    /* Hide Streamlit default styling */
-    .stButton {
-        margin-bottom: 0 !important;
-    }
-    
-    /* Chat container improvements */
-    .user-message, .ai-message {
-        margin-bottom: 16px !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-    
-    # Handle button clicks
-    if send_button and user_question:
-        with st.spinner("🧠 Thinking..."):
+    # Handle button clicks and Enter key
+    if (send_button or st.session_state.get('enter_pressed')) and user_question:
+        with st.spinner("🧠 Analyzing your data..."):
             ai_response = st.session_state.chatbot.get_ai_response(user_question)
             st.session_state.chat_history.append({
                 "user": user_question,
@@ -933,6 +1102,7 @@ def chatbot_page():
             })
             # Clear input by incrementing key
             st.session_state.input_key += 1
+            st.session_state.enter_pressed = False
         st.rerun()
     
     if clear_button:
@@ -941,52 +1111,42 @@ def chatbot_page():
         st.rerun()
 
 def home_page():
-    """Home page with navigation"""
+    """Enhanced home page with modern design"""
     st.markdown("""
     <div class="main-header">
         <h1>🔍 KRISPR Digital Analyst</h1>
-        <p>Your AI-powered business data Intelligent platform</p>
+        <p>AI-powered business intelligence platform</p>
     </div>
     """, unsafe_allow_html=True)
     
-    st.header("🚀 Welcome to KRISPR Digital Analyst")
-    
-    # Clean home page without system status
-    st.markdown("""
-    <div class="info-box">
-        <strong>🎯 Get Started:</strong> Choose an option below to access your business intelligence tools.
-    </div>
-    """, unsafe_allow_html=True)
-    
-    col1, col2 = st.columns(2)
+    # Two column layout for features
+    col1, col2 = st.columns(2, gap="large")
     
     with col1:
         st.markdown("""
-        ### 🔍 Business Intelligence Chatbot
+        <div class="feature-card">
+            <div class="home-feature">
+                <h3>🤖 AI Business Analyst</h3>
+                <p>Get instant insights from your business data with natural language queries</p>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
         
-        Ask questions about your business data:
-        - "What is media units sold of Krispr Premium Rosemary, 40g in week 26?"
-        - "Which product has maximum sales?"
-        - "Compare performance across weeks"        
-
-        """)
-        
-        if st.button("🚀 Go to Chatbot", use_container_width=True, type="primary"):
+        if st.button("🚀 Start Analysis", use_container_width=True, type="primary", key="chatbot_btn"):
             st.session_state.current_page = "chatbot"
             st.rerun()
     
     with col2:
         st.markdown("""
-        ### 👨‍💼 Admin Panel
+        <div class="feature-card">
+            <div class="home-feature">
+                <h3>👨‍💼 Data Management</h3>
+                <p>Upload and manage your business datasets securely</p>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
         
-        Administrative access for:
-        - Upload Excel files
-        - Manage business data
-        - Update datasets
-        
-        """)
-        
-        if st.button("🔐 Admin Login", use_container_width=True):
+        if st.button("🔐 Admin Access", use_container_width=True, key="admin_btn"):
             st.session_state.current_page = "admin_login"
             st.rerun()
 
@@ -1004,6 +1164,9 @@ def main():
     if 'chat_history' not in st.session_state:
         st.session_state.chat_history = []
     
+    if 'enter_pressed' not in st.session_state:
+        st.session_state.enter_pressed = False
+    
     # Initialize OpenAI
     try:
         api_key = st.secrets["OPENAI_API_KEY"]
@@ -1014,15 +1177,15 @@ def main():
         st.error("⚠️ OpenAI API key not found in secrets.toml")
         st.stop()
     
-    # Navigation
+    # Navigation in sidebar
     with st.sidebar:
-        st.header("🧭 Navigation")
+        st.markdown("<h2 style='color: white; text-align: center; margin-bottom: 2rem;'>🧭 Navigation</h2>", unsafe_allow_html=True)
         
         if st.button("🏠 Home", use_container_width=True):
             st.session_state.current_page = "home"
             st.rerun()
         
-        if st.button("🔍 Chatbot", use_container_width=True):
+        if st.button("🤖 AI Analyst", use_container_width=True):
             st.session_state.current_page = "chatbot"
             st.rerun()
         
@@ -1034,8 +1197,6 @@ def main():
             if st.button("🔐 Admin Login", use_container_width=True):
                 st.session_state.current_page = "admin_login"
                 st.rerun()
-        
-        # Clean sidebar - no system status here
     
     # Route to appropriate page
     if st.session_state.current_page == "home":
