@@ -157,25 +157,38 @@ st.markdown("""
     }
     
     .user-message {
-        background: linear-gradient(135deg, rgba(33, 150, 243, 0.1) 0%, rgba(100, 181, 246, 0.08) 100%);
+        background: linear-gradient(135deg, rgba(33, 150, 243, 0.12) 0%, rgba(100, 181, 246, 0.08) 100%);
         padding: 1.2rem;
         border-radius: 15px;
         margin-bottom: 1rem;
-        border: 1px solid rgba(33, 150, 243, 0.15);
+        border: 1px solid rgba(33, 150, 243, 0.2);
         backdrop-filter: blur(8px);
         animation: slideInLeft 0.4s ease-out;
-        color: #1565c0;
+        color: #1565C0;
+        font-weight: 500;
     }
     
     .ai-message {
-        background: linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(129, 199, 132, 0.08) 100%);
+        background: linear-gradient(135deg, rgba(76, 175, 80, 0.12) 0%, rgba(129, 199, 132, 0.08) 100%);
         padding: 1.2rem;
         border-radius: 15px;
         margin-bottom: 1rem;
-        border: 1px solid rgba(76, 175, 80, 0.15);
+        border: 1px solid rgba(76, 175, 80, 0.2);
         backdrop-filter: blur(8px);
         animation: slideInRight 0.4s ease-out;
-        color: #2e7d32;
+        color: #1B5E20;
+        font-weight: 500;
+    }
+    
+    /* Better text contrast for readability */
+    .user-message strong {
+        color: #0D47A1 !important;
+        font-weight: 700;
+    }
+    
+    .ai-message strong {
+        color: #0D4F14 !important;
+        font-weight: 700;
     }
     
     @keyframes slideInLeft {
@@ -209,29 +222,32 @@ st.markdown("""
         backdrop-filter: blur(8px);
     }
     
-    /* Smaller, Fresh Primary Buttons */
+    /* Smaller, KRISPR-branded Primary Buttons */
     div.stButton > button[data-testid="baseButton-primary"] {
-        background: linear-gradient(135deg, #4caf50 0%, #66bb6a 50%, #81c784 100%) !important;
-        color: white !important;
+        background: linear-gradient(135deg, #FFA726 0%, #FFB74D 50%, #FFCC02 100%) !important;
+        color: #1B5E20 !important;
         border: none !important;
-        border-radius: 10px !important;
-        padding: 10px 20px !important;
+        border-radius: 8px !important;
+        padding: 8px 24px !important;
         font-weight: 600 !important;
         font-size: 14px !important;
         letter-spacing: 0.5px !important;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3) !important;
-        width: 100% !important;
-        min-height: 40px !important;
+        box-shadow: 0 3px 12px rgba(255, 167, 38, 0.3) !important;
+        width: auto !important;
+        min-height: 36px !important;
+        max-width: 120px !important;
         position: relative !important;
         overflow: hidden !important;
         text-transform: none !important;
+        margin: 0 auto !important;
     }
     
     div.stButton > button[data-testid="baseButton-primary"]:hover {
         transform: translateY(-2px) scale(1.02) !important;
-        box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4) !important;
-        background: linear-gradient(135deg, #43a047 0%, #5cb85c 50%, #72c472 100%) !important;
+        box-shadow: 0 6px 20px rgba(255, 167, 38, 0.4) !important;
+        background: linear-gradient(135deg, #FF9800 0%, #FFA726 50%, #FFB74D 100%) !important;
+        color: #0D4F14 !important;
     }
     
     div.stButton > button[data-testid="baseButton-primary"]::before {
@@ -249,52 +265,62 @@ st.markdown("""
         left: 100% !important;
     }
     
-    /* Smaller Secondary Button */
+    /* Form submit button specific styling */
+    div[data-testid="stForm"] button[data-testid="baseButton-primary"] {
+        width: 120px !important;
+        margin: 10px auto !important;
+        display: block !important;
+    }
+    
+    /* Smaller Secondary Button with KRISPR orange */
     div.stButton > button[data-testid="baseButton-secondary"] {
-        background: linear-gradient(135deg, #ff7043 0%, #ff8a65 50%, #ffab91 100%) !important;
+        background: linear-gradient(135deg, #FF7043 0%, #FF8A65 50%, #FFAB91 100%) !important;
         color: white !important;
         border: none !important;
-        border-radius: 10px !important;
-        padding: 10px 20px !important;
+        border-radius: 8px !important;
+        padding: 8px 20px !important;
         font-weight: 600 !important;
         font-size: 14px !important;
         letter-spacing: 0.5px !important;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        box-shadow: 0 4px 15px rgba(255, 112, 67, 0.3) !important;
-        width: 100% !important;
-        min-height: 40px !important;
+        box-shadow: 0 3px 12px rgba(255, 112, 67, 0.3) !important;
+        width: auto !important;
+        min-height: 36px !important;
+        max-width: 120px !important;
         position: relative !important;
         overflow: hidden !important;
         text-transform: none !important;
+        margin: 0 auto !important;
     }
     
     div.stButton > button[data-testid="baseButton-secondary"]:hover {
         transform: translateY(-2px) scale(1.02) !important;
-        box-shadow: 0 8px 25px rgba(255, 112, 67, 0.4) !important;
+        box-shadow: 0 6px 20px rgba(255, 112, 67, 0.4) !important;
         background: linear-gradient(135deg, #f4511e 0%, #ff7043 50%, #ff8a65 100%) !important;
     }
     
-    /* Regular Navigation buttons - Small & Clean */
+    /* Regular Navigation buttons - Smaller & KRISPR branded */
     div.stButton > button:not([data-testid="baseButton-primary"]):not([data-testid="baseButton-secondary"]) {
-        background: rgba(255, 255, 255, 0.8) !important;
-        color: #4caf50 !important;
+        background: rgba(255, 255, 255, 0.9) !important;
+        color: #2E7D32 !important;
         border: 1px solid rgba(76, 175, 80, 0.3) !important;
         border-radius: 8px !important;
         padding: 8px 16px !important;
-        font-weight: 500 !important;
+        font-weight: 600 !important;
         backdrop-filter: blur(8px) !important;
         transition: all 0.3s ease !important;
         width: 100% !important;
         min-height: 36px !important;
-        font-size: 14px !important;
+        font-size: 13px !important;
+        text-shadow: none !important;
     }
     
     div.stButton > button:not([data-testid="baseButton-primary"]):not([data-testid="baseButton-secondary"]):hover {
-        background: rgba(76, 175, 80, 0.1) !important;
-        border-color: rgba(76, 175, 80, 0.5) !important;
+        background: linear-gradient(135deg, #FFF3E0 0%, #FFECB3 100%) !important;
+        border-color: rgba(255, 167, 38, 0.5) !important;
         transform: translateY(-1px) !important;
-        box-shadow: 0 4px 15px rgba(76, 175, 80, 0.15) !important;
-        color: #2e7d32 !important;
+        box-shadow: 0 4px 15px rgba(255, 167, 38, 0.15) !important;
+        color: #1B5E20 !important;
     }
     
     /* Light Input Field */
@@ -1170,8 +1196,10 @@ def chatbot_page():
             key=f"user_input_{st.session_state.input_key}"
         )
         
-        # Hidden submit button (triggered by Enter key)
-        submitted = st.form_submit_button("Send", type="primary", use_container_width=True)
+        # Centered submit button
+        col1, col2, col3 = st.columns([2, 1, 2])
+        with col2:
+            submitted = st.form_submit_button("Send", type="primary", use_container_width=True)
     
     # Handle form submission (Enter key or button click)
     if submitted and user_question:
