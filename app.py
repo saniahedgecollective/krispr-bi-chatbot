@@ -13,7 +13,7 @@ import re
 # Set page config
 st.set_page_config(
     page_title="KRISPR Business Intelligence Chatbot",
-    page_icon="🔍",
+    page_icon="🧬",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -786,7 +786,7 @@ def chatbot_page():
             return
     
     # Main chat interface - full width
-    st.header("💬 Chat with Your Data")
+    # Removed "Chat with Your Data" header as requested
     
     # Chat history container with new styling
     st.markdown('<div class="chat-history">', unsafe_allow_html=True)
@@ -806,7 +806,7 @@ def chatbot_page():
     
     # User input
     user_question = st.text_input(
-        "Ask a question about your data:", 
+        "Search your business data:", 
         placeholder="e.g., What is media units sold of Krispr Premium Rosemary, 40g in week 26?",
         key=f"user_input_{st.session_state.input_key}"
     )
@@ -960,12 +960,16 @@ def home_page():
     
     with col1:
         st.markdown("""
-        ### 💬 Business Intelligence Chatbot
+        ### 🔍 Business Intelligence Chatbot
         
         Ask questions about your business data:
         - "What is media units sold of Krispr Premium Rosemary, 40g in week 26?"
         - "Which product has maximum sales?"
+        - "Show me trends by category"
         - "Compare performance across weeks"
+        - "What is the CPA for specific products?"
+        
+        **Get instant, accurate insights from your data.**
         """)
         
         if st.button("🚀 Go to Chatbot", use_container_width=True, type="primary"):
@@ -980,7 +984,9 @@ def home_page():
         - Upload Excel files
         - Manage business data
         - Update datasets
+        - Configure system
         
+        **Secure access for data management.**
         """)
         
         if st.button("🔐 Admin Login", use_container_width=True):
@@ -1019,7 +1025,7 @@ def main():
             st.session_state.current_page = "home"
             st.rerun()
         
-        if st.button("💬 Chatbot", use_container_width=True):
+        if st.button("🔍 Chatbot", use_container_width=True):
             st.session_state.current_page = "chatbot"
             st.rerun()
         
