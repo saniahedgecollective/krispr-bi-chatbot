@@ -981,7 +981,6 @@ def home_page():
         - Manage business data
         - Update datasets
         
-        **Secure access for data management.**
         """)
         
         if st.button("🔐 Admin Login", use_container_width=True):
