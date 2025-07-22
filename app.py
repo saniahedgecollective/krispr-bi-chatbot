@@ -912,6 +912,19 @@ def admin_login_page():
     </div>
     """, unsafe_allow_html=True)
     
+    # Navigation bar at top
+    col1, col2, col3 = st.columns([2, 2, 4])
+    with col1:
+        if st.button("🏠 Back to Home", use_container_width=True):
+            st.session_state.current_page = "home"
+            st.rerun()
+    with col2:
+        if st.button("🌱 Go to Chatbot", use_container_width=True):
+            st.session_state.current_page = "chatbot"
+            st.rerun()
+    
+    st.markdown("---")
+    
     with st.form("admin_login"):
         st.header("🔑 Authentication Required")
         password = st.text_input("Admin Password", type="password", placeholder="Enter your secure password")
@@ -934,13 +947,23 @@ def admin_panel():
     </div>
     """, unsafe_allow_html=True)
     
-    # Logout button
-    col1, col2, col3 = st.columns([1, 1, 1])
+    # Navigation bar at top
+    col1, col2, col3, col4 = st.columns([2, 2, 1, 3])
+    with col1:
+        if st.button("🏠 Back to Home", use_container_width=True):
+            st.session_state.current_page = "home"
+            st.rerun()
+    with col2:
+        if st.button("🌱 Go to Chatbot", use_container_width=True):
+            st.session_state.current_page = "chatbot"
+            st.rerun()
     with col3:
         if st.button("🚪 Logout", use_container_width=True):
             st.session_state.admin_logged_in = False
             st.session_state.current_page = "home"
             st.rerun()
+    
+    st.markdown("---")
     
     # System Status Section for Admin
     st.header("🔧 System Status")
@@ -1064,6 +1087,24 @@ def chatbot_page():
     </div>
     """, unsafe_allow_html=True)
     
+    # Navigation bar at top
+    col1, col2, col3, col4 = st.columns([2, 1, 1, 4])
+    with col1:
+        if st.button("🏠 Back to Home", use_container_width=True):
+            st.session_state.current_page = "home"
+            st.rerun()
+    with col2:
+        if st.button("🔐 Admin", use_container_width=True):
+            st.session_state.current_page = "admin_login"
+            st.rerun()
+    with col3:
+        if st.button("🗑️ Clear All", use_container_width=True):
+            st.session_state.chat_history = []
+            st.session_state.input_key += 1
+            st.rerun()
+    
+    st.markdown("---")
+    
     # Initialize input key for clearing
     if 'input_key' not in st.session_state:
         st.session_state.input_key = 0
@@ -1106,13 +1147,10 @@ def chatbot_page():
     # Smaller buttons
     st.markdown("<br>", unsafe_allow_html=True)
     
-    col_send, col_clear, col_spacer = st.columns([1.5, 1.5, 7])
+    col_send, col_spacer = st.columns([2, 6])
     
     with col_send:
         send_button = st.button("Send", key="send_btn", type="primary", help="Send your question", use_container_width=True)
-    
-    with col_clear:
-        clear_button = st.button("Clear", key="clear_btn", type="secondary", help="Clear chat history", use_container_width=True)
     
     # Handle button clicks and Enter key
     if (send_button or st.session_state.get('enter_pressed')) and user_question:
@@ -1125,11 +1163,6 @@ def chatbot_page():
             # Clear input by incrementing key
             st.session_state.input_key += 1
             st.session_state.enter_pressed = False
-        st.rerun()
-    
-    if clear_button:
-        st.session_state.chat_history = []
-        st.session_state.input_key += 1
         st.rerun()
 
 def home_page():
