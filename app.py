@@ -965,7 +965,6 @@ def home_page():
         Ask questions about your business data:
         - "What is media units sold of Krispr Premium Rosemary, 40g in week 26?"
         - "Which product has maximum sales?"
-        - "Show me trends by category"
         - "Compare performance across weeks"
         - "What is the CPA for specific products?"
         
