@@ -406,18 +406,18 @@ class KrisprChatbot:
                 return "Error loading database information. Please contact admin."
         
         try:
-            # Handle greetings and non-data questions first
+            # Handle simple greetings only (not data questions)
             question_lower = user_question.lower().strip()
-            greetings = ['hi', 'hello', 'hey', 'good morning', 'good afternoon', 'good evening']
-            identity_questions = ['who are you', 'what are you', 'introduce yourself']
+            simple_greetings = ['hi', 'hello', 'hey']
             
-            if any(greeting in question_lower for greeting in greetings):
+            # Only respond with greeting if it's JUST a greeting, not a data question
+            if question_lower in simple_greetings:
                 return "Hi there! 👋 I'm KRISPR Business Intelligence Assistant. I'm here to help you analyze your business data and provide insights. How can I assist you today?"
             
-            if any(identity in question_lower for identity in identity_questions):
+            if question_lower in ['who are you', 'what are you', 'introduce yourself']:
                 return "I'm KRISPR Business Intelligence Assistant, your expert data analyst. I can help you understand your business data, find specific metrics, analyze trends, and provide actionable insights. What would you like to know about your data?"
             
-            # For data questions, continue with SQL processing
+            # For ALL OTHER questions (including data questions), process with SQL
             # Prepare database context
             context = f"""
             You are KRISPR Business Intelligence Assistant, an expert data analyst. You have access to business data from multiple sources.
@@ -463,14 +463,15 @@ class KrisprChatbot:
             1. You are a business intelligence assistant with access to comprehensive business data
             2. When users ask questions, generate and execute queries to find precise answers
             3. Use SELECT statements to query the data
-            4. For product searches, use LIKE with wildcards: WHERE column LIKE '%product_name%'
-            5. For week searches, look for columns containing 'week' or numeric week values
-            6. Always provide the exact query you would use
-            7. Based on the schema above, construct accurate queries
-            8. Use the clean column names (system-compatible) in your queries
-            9. When searching for products, be flexible with naming (use LIKE '%krispr%' AND LIKE '%rosemary%')
-            10. If looking for week 26, search for columns that might contain week numbers
-            11. NEVER mention "SQLite", "database", or technical terms - just provide business insights
+            4. For vendor/supplier questions, look for columns like 'vendor', 'supplier', 'source', etc.
+            5. For sales questions, look for columns like 'units', 'sales', 'quantity', 'amount', etc.
+            6. For week questions, look for columns containing 'week' or numeric week values
+            7. Always provide the exact query you would use
+            8. Based on the schema above, construct accurate queries
+            9. Use the clean column names (system-compatible) in your queries
+            10. When searching for week 26, use WHERE week = 26 or WHERE week_number = 26
+            11. Group results by vendor/supplier to show breakdown
+            12. NEVER mention "SQLite", "database", or technical terms - just provide business insights
             
             IMPORTANT: Format your query EXACTLY like this (no markdown, no code blocks):
             SQL_QUERY: SELECT column FROM table WHERE condition;
@@ -538,14 +539,17 @@ class KrisprChatbot:
                         
                         Based on these results, provide a clear, specific answer to the user's question: {user_question}
                         
-                        If the results show the exact data they're looking for, provide the specific value.
-                        If no results were found, explain what was searched and suggest alternatives.
+                        Format the response to show:
+                        1. A clear summary answer
+                        2. Breakdown by vendor/supplier with specific numbers
+                        3. Any insights or recommendations
                         
                         IMPORTANT: 
                         - Provide only a clean, direct answer
                         - Do not mention queries, databases, or technical details
                         - Use business language only
                         - Be conversational and helpful
+                        - Show specific numbers and breakdowns
                         """
                         
                         final_response = self.client.chat.completions.create(
@@ -618,10 +622,30 @@ def admin_panel():
             st.session_state.current_page = "home"
             st.rerun()
     
+    # System Status Section for Admin
+    st.header("🔧 System Status")
+    db_ready, db_message = st.session_state.chatbot.check_database_exists_and_ready()
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        if db_ready:
+            st.success("✅ Database Ready")
+        else:
+            st.warning("⚠️ Database Not Ready")
+        
+        st.info(f"📁 DB Path: `{st.session_state.chatbot.db_path}`")
+        st.info(f"📄 File Exists: {'Yes' if os.path.exists(st.session_state.chatbot.db_path) else 'No'}")
+    
+    with col2:
+        if db_ready:
+            st.metric("System Status", "Ready", delta="Operational")
+        else:
+            st.metric("System Status", "Not Ready", delta="Action Required")
+    
     st.header("📊 Data Management")
     
     # Check database status
-    db_ready, db_message = st.session_state.chatbot.check_database_exists_and_ready()
+    # db_ready, db_message = st.session_state.chatbot.check_database_exists_and_ready()
     
     if db_ready:
         st.markdown(f"""
@@ -732,44 +756,41 @@ def chatbot_page():
     if 'input_key' not in st.session_state:
         st.session_state.input_key = 0
     
-    # Check database status
+    # Check database status (but don't show to users)
     db_ready, db_message = st.session_state.chatbot.check_database_exists_and_ready()
     
     if not db_ready:
-        st.markdown(f"""
+        st.markdown("""
         <div class="info-box">
-            <strong>⚠️ Database Status:</strong> {db_message}<br>
-            Please contact admin to upload data or check the database configuration.
+            <strong>⚠️ System Notice:</strong> Data is being prepared. Please contact admin if this persists.
         </div>
         """, unsafe_allow_html=True)
         return
     
-    # Show database ready status
-    st.markdown(f"""
-    <div class="success-box">
-        <strong>✅ System Ready:</strong> {db_message}
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Load database summary if not already loaded
+    # Load database summary if not already loaded (silently)
     if not st.session_state.chatbot.data_summary:
         if not st.session_state.chatbot.load_existing_database_summary():
-            st.error("❌ Error loading database information. Please contact admin.")
+            st.error("❌ Error loading data. Please contact admin.")
             return
     
     # Main chat interface - full width
     st.header("💬 Chat with Your Data")
     
+    # Chat history container with new styling
+    st.markdown('<div class="chat-history">', unsafe_allow_html=True)
+    
     # Display chat history
     for i, chat in enumerate(st.session_state.chat_history):
         st.markdown(f"""
         <div class="user-message">
-            <strong>💭 You:</strong> {chat['user']}
+            <strong>You:</strong> {chat['user']}
         </div>
         <div class="ai-message">
-            <strong>🧬 KRISPR AI:</strong><br>{chat['ai']}
+            <strong>KRISPR AI:</strong><br>{chat['ai']}
         </div>
         """, unsafe_allow_html=True)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
     
     # User input
     user_question = st.text_input(
@@ -1005,17 +1026,7 @@ def main():
                 st.session_state.current_page = "admin_login"
                 st.rerun()
         
-        # Show database status in sidebar
-        st.markdown("---")
-        st.subheader("📊 System Status")
-        db_ready, db_message = st.session_state.chatbot.check_database_exists_and_ready()
-        if db_ready:
-            st.success("✅ Database Ready")
-        else:
-            st.warning("⚠️ Database Not Ready")
-        
-        st.text(f"DB Path: {st.session_state.chatbot.db_path}")
-        st.text(f"Exists: {'Yes' if os.path.exists(st.session_state.chatbot.db_path) else 'No'}")
+        # Clean sidebar - no system status here
     
     # Route to appropriate page
     if st.session_state.current_page == "home":
