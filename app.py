@@ -13,7 +13,7 @@ import re
 # Set page config
 st.set_page_config(
     page_title="KRISPR Business Intelligence Chatbot",
-    page_icon="🧬",
+    page_icon="🔍",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -759,7 +759,7 @@ def chatbot_page():
     """Main chatbot interface"""
     st.markdown("""
     <div class="main-header">
-        <h1>🧬 KRISPR Business Intelligence Chatbot</h1>
+        <h1>🔍 KRISPR Business Intelligence Chatbot</h1>
         <p>Ask questions about your business data and get intelligent insights</p>
     </div>
     """, unsafe_allow_html=True)
@@ -942,7 +942,7 @@ def home_page():
     """Home page with navigation"""
     st.markdown("""
     <div class="main-header">
-        <h1>🧬 KRISPR Business Intelligence</h1>
+        <h1>🔍 KRISPR Business Intelligence</h1>
         <p>Your AI-powered business data analysis platform</p>
     </div>
     """, unsafe_allow_html=True)
