@@ -980,7 +980,6 @@ def home_page():
         - Upload Excel files
         - Manage business data
         - Update datasets
-        - Configure system
         
         **Secure access for data management.**
         """)
