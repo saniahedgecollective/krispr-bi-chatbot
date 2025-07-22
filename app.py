@@ -414,7 +414,7 @@ class KrisprChatbot:
             if question_lower in simple_greetings:
                 return "Hi there! 👋 I'm KRISPR Business Intelligence Assistant. I'm here to help you analyze your business data and provide insights. How can I assist you today?"
             
-            if question_lower in ['who are you', 'what are you', 'introduce yourself']:
+            if question_lower in ['who are you', 'what are you','what can you do ?', 'introduce yourself']:
                 return "I'm KRISPR Business Intelligence Assistant, your expert data analyst. I can help you understand your business data, find specific metrics, analyze trends, and provide actionable insights. What would you like to know about your data?"
             
             # For ALL OTHER questions (including data questions), process with SQL
@@ -546,6 +546,8 @@ class KrisprChatbot:
                         - Don't use "**Summary Answer**" or "**Breakdown**" formatting
                         - Don't use numbered or bulleted lists unless absolutely necessary
                         - Include specific numbers and vendor names naturally in sentences
+                        - NEVER mention file names, table names, sheet names, or database structure details
+                        - Don't say things like "from Raw_Data_Date_Wise" or "reading from table X"
                         - Be helpful and insightful but keep it conversational
                         - If multiple vendors, mention them naturally: "Vendor A had 500 units while Vendor B had 300 units"
                         
