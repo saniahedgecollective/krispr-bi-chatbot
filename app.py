@@ -537,19 +537,28 @@ class KrisprChatbot:
                         Results: {query_result['data']}
                         Columns: {query_result['columns']}
                         
-                        Based on these results, provide a clear, specific answer to the user's question: {user_question}
+                        Based on these results, provide a natural, conversational answer to the user's question: {user_question}
                         
-                        Format the response to show:
-                        1. A clear summary answer
-                        2. Breakdown by vendor/supplier with specific numbers
-                        3. Any insights or recommendations
+                        IMPORTANT RESPONSE GUIDELINES:
+                        - Write in a conversational, friendly tone like you're talking to a colleague
+                        - Give the direct answer first, then supporting details
+                        - Use natural language, not formal structure or numbered lists
+                        - Don't use "**Summary Answer**" or "**Breakdown**" formatting
+                        - Don't use numbered or bulleted lists unless absolutely necessary
+                        - Include specific numbers and vendor names naturally in sentences
+                        - Be helpful and insightful but keep it conversational
+                        - If multiple vendors, mention them naturally: "Vendor A had 500 units while Vendor B had 300 units"
                         
-                        IMPORTANT: 
-                        - Provide only a clean, direct answer
-                        - Do not mention queries, databases, or technical details
-                        - Use business language only
-                        - Be conversational and helpful
-                        - Show specific numbers and breakdowns
+                        Example of good response style:
+                        "Based on your data, Talabat Mart in Dubai Silicon Oasis performed the best with 464 units sold. This is significantly higher than other vendors, showing they have a strong customer base in that area."
+                        
+                        DO NOT USE:
+                        - Numbered lists (1. 2. 3.)
+                        - Bullet points with asterisks (* * *)
+                        - Bold formatting for sections (**Summary**, **Breakdown**)
+                        - Formal business report structure
+                        
+                        Just answer naturally like a helpful business analyst would in conversation.
                         """
                         
                         final_response = self.client.chat.completions.create(
@@ -564,15 +573,18 @@ class KrisprChatbot:
                         
                         return final_response.choices[0].message.content
                     else:
-                        return "I couldn't find any matching data for your query. Could you please try rephrasing your question or check if the product name or time period is correct?"
+                        return "I couldn't find relevant data for that question. I specialize in product sales, weekly trends, and media or organic performance. Try asking: 'Which products had the highest sales last week?' or 'What's the media performance for week 26?'"
                 else:
-                    return f"I couldn't find the requested information. This might be due to different naming conventions or the data not being available in the current dataset."
+                    return "I couldn't find relevant data for that question. I specialize in product sales, weekly trends, and media or organic performance. Try asking: 'Which products had the highest sales last week?' or 'What's the media performance for week 26?'"
             else:
-                # If no SQL query found, return the AI response directly
-                return ai_response
+                # If no SQL query found, check if it's a general question
+                if any(word in user_question.lower() for word in ['weather', 'news', 'time', 'date', 'recipe', 'movie', 'music', 'sports', 'politics']):
+                    return "I couldn't find relevant data for that question. I specialize in product sales, weekly trends, and media or organic performance. Try asking: 'Which products had the highest sales last week?' or 'What's the media performance for week 26?'"
+                else:
+                    return ai_response
             
         except Exception as e:
-            return f"I apologize, but I encountered an issue while processing your request. Please try again or contact support if the problem persists."
+            return "I couldn't find relevant data for that question. I specialize in product sales, weekly trends, and media or organic performance. Try asking: 'Which products had the highest sales last week?' or 'What's the media performance for week 26?'"
 
 def check_admin_password(password):
     """Check if the provided password matches admin password"""
