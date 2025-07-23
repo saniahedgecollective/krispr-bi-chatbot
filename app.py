@@ -13,85 +13,442 @@ import re
 # Set page config
 st.set_page_config(
     page_title="KRISPR Business Intelligence Chatbot",
-    page_icon="🧬",
+    page_icon="🌱",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS
+# Fresh, Light CSS with KRISPR brand colors
 st.markdown("""
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    /* Global Styles - Fresh & Light */
+    .stApp {
+        font-family: 'Inter', sans-serif;
+        background: linear-gradient(135deg, #f0f8f0 0%, #e8f5e8 30%, #f8fff8 70%, #e3f2fd 100%);
+        min-height: 100vh;
+    }
+    
+    .main .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(15px);
+        border-radius: 20px;
+        margin: 1rem;
+        border: 1px solid rgba(76, 175, 80, 0.1);
+        box-shadow: 0 8px 32px rgba(76, 175, 80, 0.1);
+    }
+    
+    /* Fresh Header with Green Gradient */
     .main-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 2rem;
-        border-radius: 10px;
+        background: linear-gradient(135deg, rgba(76, 175, 80, 0.9) 0%, rgba(129, 199, 132, 0.8) 50%, rgba(165, 214, 167, 0.7) 100%);
+        padding: 2.5rem 2rem;
+        border-radius: 20px;
         margin-bottom: 2rem;
         color: white;
         text-align: center;
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 12px 30px rgba(76, 175, 80, 0.2);
+        animation: gentleGlow 4s ease-in-out infinite alternate;
     }
     
+    @keyframes gentleGlow {
+        0% { box-shadow: 0 12px 30px rgba(76, 175, 80, 0.2); }
+        100% { box-shadow: 0 15px 35px rgba(129, 199, 132, 0.25); }
+    }
+    
+    .main-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        animation: shimmer 4s infinite;
+        z-index: 1;
+    }
+    
+    @keyframes shimmer {
+        0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+        100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+    }
+    
+    .main-header h1 {
+        position: relative;
+        z-index: 2;
+        font-size: 2.8rem;
+        font-weight: 700;
+        margin-bottom: 0.8rem;
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+    }
+    
+    .main-header p {
+        position: relative;
+        z-index: 2;
+        font-size: 1.1rem;
+        font-weight: 400;
+        opacity: 0.95;
+    }
+    
+    /* Admin Header - Light Orange/Red */
     .admin-header {
-        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
-        padding: 1.5rem;
-        border-radius: 10px;
+        background: linear-gradient(135deg, rgba(255, 87, 34, 0.8) 0%, rgba(255, 152, 0, 0.7) 100%);
+        padding: 2rem;
+        border-radius: 20px;
         margin-bottom: 2rem;
         color: white;
         text-align: center;
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 10px 25px rgba(255, 87, 34, 0.2);
     }
     
+    /* Light Feature Cards */
+    .feature-card {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(76, 175, 80, 0.2);
+        padding: 2rem;
+        border-radius: 18px;
+        margin-bottom: 2rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 6px 20px rgba(76, 175, 80, 0.08);
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(76, 175, 80, 0.15);
+        border-color: rgba(76, 175, 80, 0.3);
+        background: rgba(255, 255, 255, 0.95);
+    }
+    
+    .feature-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(76, 175, 80, 0.1), transparent);
+        transition: left 0.6s;
+    }
+    
+    .feature-card:hover::before {
+        left: 100%;
+    }
+    
+    /* Light Chat Containers */
     .chat-container {
-        background: #f8f9fa;
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
         padding: 1.5rem;
-        border-radius: 10px;
+        border-radius: 15px;
         margin-bottom: 1rem;
-        border-left: 4px solid #667eea;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border: 1px solid rgba(76, 175, 80, 0.15);
+        box-shadow: 0 4px 15px rgba(76, 175, 80, 0.05);
     }
     
     .user-message {
-        background: #e3f2fd;
-        padding: 1rem;
-        border-radius: 8px;
-        margin-bottom: 0.5rem;
-        border-left: 3px solid #2196f3;
+        background: linear-gradient(135deg, rgba(33, 150, 243, 0.12) 0%, rgba(100, 181, 246, 0.08) 100%);
+        padding: 1.2rem;
+        border-radius: 15px;
+        margin-bottom: 1rem;
+        border: 1px solid rgba(33, 150, 243, 0.2);
+        backdrop-filter: blur(8px);
+        animation: slideInLeft 0.4s ease-out;
+        color: #1565C0;
+        font-weight: 500;
     }
     
     .ai-message {
-        background: #f3e5f5;
-        padding: 1rem;
-        border-radius: 8px;
+        background: linear-gradient(135deg, rgba(76, 175, 80, 0.12) 0%, rgba(129, 199, 132, 0.08) 100%);
+        padding: 1.2rem;
+        border-radius: 15px;
         margin-bottom: 1rem;
-        border-left: 3px solid #9c27b0;
+        border: 1px solid rgba(76, 175, 80, 0.2);
+        backdrop-filter: blur(8px);
+        animation: slideInRight 0.4s ease-out;
+        color: #1B5E20;
+        font-weight: 500;
     }
     
+    /* Better text contrast for readability */
+    .user-message strong {
+        color: #0D47A1 !important;
+        font-weight: 700;
+    }
+    
+    .ai-message strong {
+        color: #0D4F14 !important;
+        font-weight: 700;
+    }
+    
+    @keyframes slideInLeft {
+        from { transform: translateX(-20px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @keyframes slideInRight {
+        from { transform: translateX(20px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    
+    /* Light Status Boxes */
     .success-box {
-        background: #d4edda;
-        border: 1px solid #c3e6cb;
-        padding: 1rem;
-        border-radius: 8px;
+        background: linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(129, 199, 132, 0.08) 100%);
+        border: 1px solid rgba(76, 175, 80, 0.25);
+        padding: 1.2rem;
+        border-radius: 12px;
         margin: 1rem 0;
-        color: #155724;
+        color: #2e7d32;
+        backdrop-filter: blur(8px);
     }
     
     .info-box {
-        background: #d1ecf1;
-        border: 1px solid #bee5eb;
-        padding: 1rem;
-        border-radius: 8px;
+        background: linear-gradient(135deg, rgba(33, 150, 243, 0.1) 0%, rgba(100, 181, 246, 0.08) 100%);
+        border: 1px solid rgba(33, 150, 243, 0.25);
+        padding: 1.2rem;
+        border-radius: 12px;
         margin: 1rem 0;
-        color: #0c5460;
+        color: #1565c0;
+        backdrop-filter: blur(8px);
     }
     
-    .sql-box {
-        background: #f8f9fa;
-        border: 1px solid #dee2e6;
-        padding: 1rem;
-        border-radius: 8px;
-        margin: 1rem 0;
-        font-family: monospace;
-        font-size: 0.9em;
+    /* Smaller, KRISPR-branded Primary Buttons */
+    div.stButton > button[data-testid="baseButton-primary"] {
+        background: linear-gradient(135deg, #FFA726 0%, #FFB74D 50%, #FFCC02 100%) !important;
+        color: #1B5E20 !important;
+        border: none !important;
+        border-radius: 8px !important;
+        padding: 8px 24px !important;
+        font-weight: 600 !important;
+        font-size: 14px !important;
+        letter-spacing: 0.5px !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 0 3px 12px rgba(255, 167, 38, 0.3) !important;
+        width: auto !important;
+        min-height: 36px !important;
+        max-width: 120px !important;
+        position: relative !important;
+        overflow: hidden !important;
+        text-transform: none !important;
+        margin: 0 auto !important;
+    }
+    
+    div.stButton > button[data-testid="baseButton-primary"]:hover {
+        transform: translateY(-2px) scale(1.02) !important;
+        box-shadow: 0 6px 20px rgba(255, 167, 38, 0.4) !important;
+        background: linear-gradient(135deg, #FF9800 0%, #FFA726 50%, #FFB74D 100%) !important;
+        color: #0D4F14 !important;
+    }
+    
+    div.stButton > button[data-testid="baseButton-primary"]::before {
+        content: '' !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: -100% !important;
+        width: 100% !important;
+        height: 100% !important;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent) !important;
+        transition: left 0.5s !important;
+    }
+    
+    div.stButton > button[data-testid="baseButton-primary"]:hover::before {
+        left: 100% !important;
+    }
+    
+    /* Form submit button specific styling */
+    div[data-testid="stForm"] button[data-testid="baseButton-primary"] {
+        width: 120px !important;
+        margin: 10px auto !important;
+        display: block !important;
+    }
+    
+    /* Smaller Secondary Button with KRISPR orange */
+    div.stButton > button[data-testid="baseButton-secondary"] {
+        background: linear-gradient(135deg, #FF7043 0%, #FF8A65 50%, #FFAB91 100%) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 8px !important;
+        padding: 8px 20px !important;
+        font-weight: 600 !important;
+        font-size: 14px !important;
+        letter-spacing: 0.5px !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 0 3px 12px rgba(255, 112, 67, 0.3) !important;
+        width: auto !important;
+        min-height: 36px !important;
+        max-width: 120px !important;
+        position: relative !important;
+        overflow: hidden !important;
+        text-transform: none !important;
+        margin: 0 auto !important;
+    }
+    
+    div.stButton > button[data-testid="baseButton-secondary"]:hover {
+        transform: translateY(-2px) scale(1.02) !important;
+        box-shadow: 0 6px 20px rgba(255, 112, 67, 0.4) !important;
+        background: linear-gradient(135deg, #f4511e 0%, #ff7043 50%, #ff8a65 100%) !important;
+    }
+    
+    /* Regular Navigation buttons - Smaller & KRISPR branded */
+    div.stButton > button:not([data-testid="baseButton-primary"]):not([data-testid="baseButton-secondary"]) {
+        background: rgba(255, 255, 255, 0.9) !important;
+        color: #2E7D32 !important;
+        border: 1px solid rgba(76, 175, 80, 0.3) !important;
+        border-radius: 8px !important;
+        padding: 8px 16px !important;
+        font-weight: 600 !important;
+        backdrop-filter: blur(8px) !important;
+        transition: all 0.3s ease !important;
+        width: 100% !important;
+        min-height: 36px !important;
+        font-size: 13px !important;
+        text-shadow: none !important;
+    }
+    
+    div.stButton > button:not([data-testid="baseButton-primary"]):not([data-testid="baseButton-secondary"]):hover {
+        background: linear-gradient(135deg, #FFF3E0 0%, #FFECB3 100%) !important;
+        border-color: rgba(255, 167, 38, 0.5) !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 4px 15px rgba(255, 167, 38, 0.15) !important;
+        color: #1B5E20 !important;
+    }
+    
+    /* Light Input Field */
+    div.stTextInput > div > div > input {
+        border-radius: 12px !important;
+        border: 1px solid rgba(76, 175, 80, 0.3) !important;
+        padding: 12px 16px !important;
+        font-size: 15px !important;
+        transition: all 0.3s ease !important;
+        background: rgba(255, 255, 255, 0.9) !important;
+        backdrop-filter: blur(8px) !important;
+        color: #2e7d32 !important;
+        font-weight: 500 !important;
+    }
+    
+    div.stTextInput > div > div > input:focus {
+        border-color: rgba(76, 175, 80, 0.6) !important;
+        box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.15) !important;
+        background: rgba(255, 255, 255, 1) !important;
+        outline: none !important;
+    }
+    
+    div.stTextInput > div > div > input::placeholder {
+        color: rgba(76, 175, 80, 0.7) !important;
+    }
+    
+    /* Light Sidebar */
+    .css-1d391kg {
+        background: rgba(255, 255, 255, 0.95) !important;
+        backdrop-filter: blur(15px) !important;
+        border-right: 1px solid rgba(76, 175, 80, 0.1) !important;
+    }
+    
+    .css-1d391kg h2 {
+        color: #2e7d32 !important;
+        font-weight: 600 !important;
+    }
+    
+    /* Hide Streamlit elements */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    
+    /* Home page enhancements */
+    .home-feature {
+        text-align: center;
+        padding: 1.8rem 1rem;
+    }
+    
+    .home-feature h3 {
+        color: #2e7d32;
+        font-size: 1.6rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+    
+    .home-feature p {
+        color: #4caf50;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Text colors for better readability */
+    .stMarkdown, .stText {
+        color: #2e7d32;
+    }
+    
+    /* Loading animations */
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.8; }
+    }
+    
+    .loading {
+        animation: pulse 2s infinite;
+    }
+    
+    /* Button spacing improvements */
+    .element-container:has(button) {
+        margin-top: 15px !important;
+    }
+    
+    div[data-testid="column"]:has(button) {
+        padding: 0 6px !important;
     }
 </style>
+
+<script>
+// Enhanced Enter key functionality with multiple selectors
+function setupEnterKeyHandler() {
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            // Try multiple ways to find the input field
+            let input = document.querySelector('input[placeholder*="business data"]') ||
+                       document.querySelector('input[placeholder*="Ask about"]') ||
+                       document.querySelector('input[placeholder*="Search"]') ||
+                       document.querySelector('div[data-testid="textInput"] input') ||
+                       document.querySelector('.stTextInput input');
+            
+            if (input && document.activeElement === input && input.value.trim()) {
+                e.preventDefault();
+                
+                // Try multiple ways to find the send button
+                let sendButton = document.querySelector('button[key="send_btn"]') ||
+                               document.querySelector('button[data-testid="baseButton-primary"]') ||
+                               document.querySelector('button:contains("Send")') ||
+                               Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Send'));
+                
+                if (sendButton) {
+                    sendButton.click();
+                }
+            }
+        }
+    });
+}
+
+// Run the setup immediately and also after a delay to ensure Streamlit has loaded
+setupEnterKeyHandler();
+setTimeout(setupEnterKeyHandler, 1000);
+setTimeout(setupEnterKeyHandler, 2000);
+
+// Also run when the page content changes (Streamlit re-renders)
+const observer = new MutationObserver(function(mutations) {
+    setupEnterKeyHandler();
+});
+observer.observe(document.body, { childList: true, subtree: true });
+</script>
 """, unsafe_allow_html=True)
 
 class KrisprChatbot:
@@ -406,18 +763,18 @@ class KrisprChatbot:
                 return "Error loading database information. Please contact admin."
         
         try:
-            # Handle greetings and non-data questions first
+            # Handle simple greetings only (not data questions)
             question_lower = user_question.lower().strip()
-            greetings = ['hi', 'hello', 'hey', 'good morning', 'good afternoon', 'good evening']
-            identity_questions = ['who are you', 'what are you', 'introduce yourself']
+            simple_greetings = ['hi','salam', 'hello', 'hey']
             
-            if any(greeting in question_lower for greeting in greetings):
+            # Only respond with greeting if it's JUST a greeting, not a data question
+            if question_lower in simple_greetings:
                 return "Hi there! 👋 I'm KRISPR Business Intelligence Assistant. I'm here to help you analyze your business data and provide insights. How can I assist you today?"
             
-            if any(identity in question_lower for identity in identity_questions):
+            if question_lower in ['who are you', 'what are you','what can you do ?', 'introduce yourself']:
                 return "I'm KRISPR Business Intelligence Assistant, your expert data analyst. I can help you understand your business data, find specific metrics, analyze trends, and provide actionable insights. What would you like to know about your data?"
             
-            # For data questions, continue with SQL processing
+            # For ALL OTHER questions (including data questions), process with SQL
             # Prepare database context
             context = f"""
             You are KRISPR Business Intelligence Assistant, an expert data analyst. You have access to business data from multiple sources.
@@ -428,7 +785,7 @@ class KrisprChatbot:
             AVAILABLE DATA SOURCES AND SCHEMA:
             """
             
-            # Add detailed table information
+            # Add detailed table information with enhanced column guidance
             for sheet_name, table_info in self.data_summary['tables'].items():
                 context += f"""
                 
@@ -442,41 +799,71 @@ class KrisprChatbot:
             Sample Data from {table_info['table_name']}:
             Columns: {table_info['sample_columns']}
             """
-                for i, row in enumerate(table_info['sample_data'][:5]):
+                for i, row in enumerate(table_info['sample_data'][:3]):  # Show 3 rows instead of 5 for context
                     context += f"\nRow {i+1}: {row}"
+                
+                # Enhanced column analysis for media/organic detection
+                context += f"""
+            
+            IMPORTANT COLUMN ANALYSIS for {table_info['table_name']}:
+            """
+                # Look for media/organic related columns
+                media_organic_columns = []
+                for col in table_info['sample_columns']:
+                    if any(keyword in col.lower() for keyword in ['media', 'msv', 'organic', 'osv', 'units_sold', 'performance', 'sold']):
+                        media_organic_columns.append(col)
+                
+                if media_organic_columns:
+                    context += f"Media/Organic Related Columns: {', '.join(media_organic_columns)}\n"
+                
+                # Look for week columns
+                week_columns = [col for col in table_info['sample_columns'] if 'week' in col.lower()]
+                if week_columns:
+                    context += f"Week Columns: {', '.join(week_columns)}\n"
                 
                 # Add product information if available
                 if table_info['product_columns']:
                     context += f"""
-            
             Product Columns in {table_info['table_name']}:
             """
                     for prod_col in table_info['product_columns']:
                         context += f"""
             - {prod_col['column']} (original: {prod_col['original_name']})
-              Sample products: {prod_col['unique_values'][:10]}
+              Sample products: {prod_col['unique_values'][:5]}
             """
             
             context += f"""
             
             INSTRUCTIONS:
             1. You are a business intelligence assistant with access to comprehensive business data
-            2. When users ask questions, generate and execute queries to find precise answers
-            3. Use SELECT statements to query the data
-            4. For product searches, use LIKE with wildcards: WHERE column LIKE '%product_name%'
-            5. For week searches, look for columns containing 'week' or numeric week values
-            6. Always provide the exact query you would use
-            7. Based on the schema above, construct accurate queries
-            8. Use the clean column names (system-compatible) in your queries
-            9. When searching for products, be flexible with naming (use LIKE '%krispr%' AND LIKE '%rosemary%')
-            10. If looking for week 26, search for columns that might contain week numbers
-            11. NEVER mention "SQLite", "database", or technical terms - just provide business insights
+            2. When users ask questions, ALWAYS generate and execute queries to find precise answers
+            3. Use SELECT statements to query the data - NEVER give up without trying SQL first
+            4. For media vs organic comparisons, look for columns containing:
+               - 'media', 'MSV', 'Media_Units_Sold', 'media_sold', 'media_performance'
+               - 'organic', 'OSV', 'Org_Units_Sold', 'organic_sold', 'organic_performance'
+            5. For vendor/supplier questions, look for columns like 'vendor', 'supplier', 'source', etc.
+            6. For sales questions, look for columns like 'units', 'sales', 'quantity', 'amount', etc.
+            7. For week questions, look for columns containing 'week' or numeric week values
+            8. For weekly comparisons, use GROUP BY week to compare across different weeks
+            9. For performance comparisons, calculate totals, averages, or ratios as needed
+            10. ALWAYS try to find relevant data - be creative with column name variations
+            11. Use the clean column names (system-compatible) in your queries
+            12. When searching for week 25/26, use WHERE week = 25 or WHERE week_number = 25
+            13. For comparisons, use SUM(), AVG(), or direct column comparisons
+            14. Group results by vendor/week/product as needed for breakdowns
+            15. NEVER mention "SQLite", "database", or technical terms - just provide business insights
+            
+            IMPORTANT COMPARISON EXAMPLES:
+            - Media vs Organic: SELECT week, SUM(media_units_sold) as media, SUM(org_units_sold) as organic FROM table WHERE week = 25;
+            - Weekly Sales Comparison: SELECT week, SUM(units_sold) FROM table GROUP BY week ORDER BY week;
+            - Product Performance: SELECT product, SUM(units_sold) FROM table WHERE week BETWEEN 20 AND 25 GROUP BY product;
             
             IMPORTANT: Format your query EXACTLY like this (no markdown, no code blocks):
             SQL_QUERY: SELECT column FROM table WHERE condition;
             EXPLANATION: [your explanation here]
             
             DO NOT use ```sql or ``` formatting. Just provide the plain query after "SQL_QUERY:"
+            ALWAYS TRY TO GENERATE A QUERY - don't give generic "I couldn't find data" responses without trying SQL first.
             
             USER QUESTION: {user_question}
             
@@ -536,16 +923,30 @@ class KrisprChatbot:
                         Results: {query_result['data']}
                         Columns: {query_result['columns']}
                         
-                        Based on these results, provide a clear, specific answer to the user's question: {user_question}
+                        Based on these results, provide a natural, conversational answer to the user's question: {user_question}
                         
-                        If the results show the exact data they're looking for, provide the specific value.
-                        If no results were found, explain what was searched and suggest alternatives.
+                        IMPORTANT RESPONSE GUIDELINES:
+                        - Write in a conversational, friendly tone like you're talking to a colleague
+                        - Give the direct answer first, then supporting details
+                        - Use natural language, not formal structure or numbered lists
+                        - Don't use "**Summary Answer**" or "**Breakdown**" formatting
+                        - Don't use numbered or bulleted lists unless absolutely necessary
+                        - Include specific numbers and vendor names naturally in sentences
+                        - NEVER mention file names, table names, sheet names, or database structure details
+                        - Don't say things like "from Raw_Data_Date_Wise" or "reading from table X"
+                        - Be helpful and insightful but keep it conversational
+                        - If multiple vendors, mention them naturally: "Vendor A had 500 units while Vendor B had 300 units"
                         
-                        IMPORTANT: 
-                        - Provide only a clean, direct answer
-                        - Do not mention queries, databases, or technical details
-                        - Use business language only
-                        - Be conversational and helpful
+                        Example of good response style:
+                        "Based on your data, Talabat Mart in Dubai Silicon Oasis performed the best with 464 units sold. This is significantly higher than other vendors, showing they have a strong customer base in that area."
+                        
+                        DO NOT USE:
+                        - Numbered lists (1. 2. 3.)
+                        - Bullet points with asterisks (* * *)
+                        - Bold formatting for sections (**Summary**, **Breakdown**)
+                        - Formal business report structure
+                        
+                        Just answer naturally like a helpful business analyst would in conversation.
                         """
                         
                         final_response = self.client.chat.completions.create(
@@ -560,15 +961,32 @@ class KrisprChatbot:
                         
                         return final_response.choices[0].message.content
                     else:
-                        return "I couldn't find any matching data for your query. Could you please try rephrasing your question or check if the product name or time period is correct?"
+                        return "I searched the data but couldn't find specific results for your query. Could you try rephrasing your question? For example: 'Compare media and organic units sold for week 25' or 'Show me weekly sales trends for the last 5 weeks'."
                 else:
-                    return f"I couldn't find the requested information. This might be due to different naming conventions or the data not being available in the current dataset."
+                    # If query failed, try to provide helpful debugging info
+                    error_msg = query_result.get("error", "Unknown error")
+                    if "no such column" in error_msg.lower():
+                        available_tables = list(self.data_summary['tables'].keys()) if self.data_summary else []
+                        return f"I tried to analyze your request but had trouble finding the right data columns. Available datasets: {', '.join(available_tables)}. Could you try asking: 'What columns are available?' or rephrase your question with different terms?"
+                    else:
+                        return "I encountered a technical issue while analyzing your data. Could you try rephrasing your question? For media vs organic comparisons, try: 'Compare media and organic performance for week 25'"
             else:
-                # If no SQL query found, return the AI response directly
-                return ai_response
+                # If no SQL query found, provide more specific guidance
+                if any(word in user_question.lower() for word in ['weather', 'news', 'time', 'date', 'recipe', 'movie', 'music', 'sports', 'politics']):
+                    return "I focus on business data analysis. I can help with questions like: 'Compare media and organic sales for week 25', 'Show weekly sales trends', or 'Which products performed best last week'."
+                else:
+                    # Try to give more specific guidance based on their question
+                    if any(word in user_question.lower() for word in ['compare', 'comparison', 'vs', 'versus']):
+                        return "I can help with comparisons! Try asking: 'Compare media and organic units sold for week 25' or 'Compare sales performance across different weeks'. What specific metrics would you like to compare?"
+                    elif any(word in user_question.lower() for word in ['media', 'organic']):
+                        return "I can analyze media vs organic performance! Try: 'What were the media and organic units sold in week 25?' or 'Compare MSV and OSV for last week'. What specific week are you interested in?"
+                    elif any(word in user_question.lower() for word in ['week', 'weekly']):
+                        return "I can analyze weekly trends! Try: 'Show me sales by week' or 'Compare week 24 vs week 25 performance'. Which weeks would you like to compare?"
+                    else:
+                        return ai_response
             
         except Exception as e:
-            return f"I apologize, but I encountered an issue while processing your request. Please try again or contact support if the problem persists."
+            return "I had trouble processing your request. For media vs organic analysis, try: 'Compare media and organic performance for week 25'. For weekly comparisons, try: 'Show sales trends by week'. What specific analysis would you like?"
 
 def check_admin_password(password):
     """Check if the provided password matches admin password"""
@@ -583,15 +1001,28 @@ def admin_login_page():
     """Admin login page"""
     st.markdown("""
     <div class="admin-header">
-        <h1>🔐 Admin Login</h1>
-        <p>Administrator access for data management</p>
+        <h1>🔐 Admin Access</h1>
+        <p>Secure data management portal</p>
     </div>
     """, unsafe_allow_html=True)
     
+    # Navigation bar at top
+    col1, col2, col3 = st.columns([2, 2, 4])
+    with col1:
+        if st.button("🏠 Back to Home", use_container_width=True):
+            st.session_state.current_page = "home"
+            st.rerun()
+    with col2:
+        if st.button("🌱 Go to Chatbot", use_container_width=True):
+            st.session_state.current_page = "chatbot"
+            st.rerun()
+    
+    st.markdown("---")
+    
     with st.form("admin_login"):
-        st.header("🔑 Enter Admin Credentials")
-        password = st.text_input("Admin Password", type="password", placeholder="Enter admin password")
-        submitted = st.form_submit_button("Login as Admin", use_container_width=True)
+        st.header("🔑 Authentication Required")
+        password = st.text_input("Admin Password", type="password", placeholder="Enter your secure password")
+        submitted = st.form_submit_button("Access Admin Panel", use_container_width=True)
         
         if submitted:
             if password and check_admin_password(password):
@@ -599,30 +1030,58 @@ def admin_login_page():
                 st.session_state.current_page = "admin_panel"
                 st.rerun()
             else:
-                st.error("❌ Invalid admin password")
+                st.error("❌ Invalid credentials")
 
 def admin_panel():
     """Admin panel for data management"""
     st.markdown("""
     <div class="admin-header">
-        <h1>👨‍💼 Admin Panel</h1>
-        <p>Data Management & Configuration</p>
+        <h1>👨‍💼 Admin Control Panel</h1>
+        <p>Data Management & System Configuration</p>
     </div>
     """, unsafe_allow_html=True)
     
-    # Logout button
-    col1, col2, col3 = st.columns([1, 1, 1])
+    # Navigation bar at top
+    col1, col2, col3, col4 = st.columns([2, 2, 1, 3])
+    with col1:
+        if st.button("🏠 Back to Home", use_container_width=True):
+            st.session_state.current_page = "home"
+            st.rerun()
+    with col2:
+        if st.button("🌱 Go to Chatbot", use_container_width=True):
+            st.session_state.current_page = "chatbot"
+            st.rerun()
     with col3:
         if st.button("🚪 Logout", use_container_width=True):
             st.session_state.admin_logged_in = False
             st.session_state.current_page = "home"
             st.rerun()
     
+    st.markdown("---")
+    
+    # System Status Section for Admin
+    st.header("🔧 System Status")
+    db_ready, db_message = st.session_state.chatbot.check_database_exists_and_ready()
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        if db_ready:
+            st.success("✅ Database Ready")
+        else:
+            st.warning("⚠️ Database Not Ready")
+        
+        st.info(f"📁 DB Path: `{st.session_state.chatbot.db_path}`")
+        st.info(f"📄 File Exists: {'Yes' if os.path.exists(st.session_state.chatbot.db_path) else 'No'}")
+    
+    with col2:
+        if db_ready:
+            st.metric("System Status", "Ready", delta="Operational")
+        else:
+            st.metric("System Status", "Not Ready", delta="Action Required")
+    
     st.header("📊 Data Management")
     
     # Check database status
-    db_ready, db_message = st.session_state.chatbot.check_database_exists_and_ready()
-    
     if db_ready:
         st.markdown(f"""
         <div class="success-box">
@@ -666,13 +1125,7 @@ def admin_panel():
     st.markdown("""
     <div class="info-box">
         <strong>🔗 Making Data Persistent:</strong><br>
-        After uploading data, you must commit the <code>data/</code> folder to GitHub for persistence:
-        <br><br>
-        <code>
-        git add data/<br>
-        git commit -m "Update database"<br>
-        git push
-        </code>
+        After uploading data, commit the <code>data/</code> folder to GitHub for persistence.
     </div>
     """, unsafe_allow_html=True)
     
@@ -707,7 +1160,7 @@ def admin_panel():
             st.markdown("---")
             col1, col2, col3 = st.columns([1, 2, 1])
             with col2:
-                if st.button("💾 Process Data", use_container_width=True, type="primary"):
+                if st.button("Process Data", use_container_width=True, type="primary"):
                     with st.spinner("🔄 Processing your business data..."):
                         if st.session_state.chatbot.create_database_from_excel(uploaded_file):
                             st.balloons()
@@ -723,174 +1176,77 @@ def chatbot_page():
     """Main chatbot interface"""
     st.markdown("""
     <div class="main-header">
-        <h1>🧬 KRISPR Business Intelligence Chatbot</h1>
-        <p>Ask questions about your business data and get intelligent insights</p>
+        <h1>🌱 KRISPR AI Analyst</h1>
+        <p>Fresh insights from your business data</p>
     </div>
     """, unsafe_allow_html=True)
+    
+    # Navigation bar at top
+    col1, col2, col3, col4 = st.columns([2, 1, 1, 4])
+    with col1:
+        if st.button("🏠 Back to Home", use_container_width=True):
+            st.session_state.current_page = "home"
+            st.rerun()
+    with col2:
+        if st.button("🔐 Admin", use_container_width=True):
+            st.session_state.current_page = "admin_login"
+            st.rerun()
+    with col3:
+        if st.button("🗑️ Clear All", use_container_width=True):
+            st.session_state.chat_history = []
+            st.session_state.input_key += 1
+            st.rerun()
+    
+    st.markdown("---")
     
     # Initialize input key for clearing
     if 'input_key' not in st.session_state:
         st.session_state.input_key = 0
     
-    # Check database status
+    # Check database status (but don't show to users)
     db_ready, db_message = st.session_state.chatbot.check_database_exists_and_ready()
     
     if not db_ready:
-        st.markdown(f"""
+        st.markdown("""
         <div class="info-box">
-            <strong>⚠️ Database Status:</strong> {db_message}<br>
-            Please contact admin to upload data or check the database configuration.
+            <strong>⚠️ System Notice:</strong> Data is being prepared. Please contact admin if this persists.
         </div>
         """, unsafe_allow_html=True)
         return
     
-    # Show database ready status
-    st.markdown(f"""
-    <div class="success-box">
-        <strong>✅ System Ready:</strong> {db_message}
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Load database summary if not already loaded
+    # Load database summary if not already loaded (silently)
     if not st.session_state.chatbot.data_summary:
         if not st.session_state.chatbot.load_existing_database_summary():
-            st.error("❌ Error loading database information. Please contact admin.")
+            st.error("❌ Error loading data. Please contact admin.")
             return
-    
-    # Main chat interface - full width
-    st.header("💬 Chat with Your Data")
     
     # Display chat history
     for i, chat in enumerate(st.session_state.chat_history):
         st.markdown(f"""
         <div class="user-message">
-            <strong>💭 You:</strong> {chat['user']}
+            <strong>💬 You:</strong> {chat['user']}
         </div>
         <div class="ai-message">
-            <strong>🧬 KRISPR AI:</strong><br>{chat['ai']}
+            <strong>🌱 KRISPR AI:</strong><br>{chat['ai']}
         </div>
         """, unsafe_allow_html=True)
     
-    # User input
-    user_question = st.text_input(
-        "Ask a question about your data:", 
-        placeholder="e.g., What is media units sold of Krispr Premium Rosemary, 40g in week 26?",
-        key=f"user_input_{st.session_state.input_key}"
-    )
+    # User input with form for Enter key support
+    with st.form(key="chat_form", clear_on_submit=True):
+        user_question = st.text_input(
+            "Search your business data:", 
+            placeholder="Ask about products, sales, performance, weekly trends...",
+            key=f"user_input_{st.session_state.input_key}"
+        )
+        
+        # Centered submit button
+        col1, col2, col3 = st.columns([2, 1, 2])
+        with col2:
+            submitted = st.form_submit_button("Send", type="primary", use_container_width=True)
     
-    # Beautiful buttons with proper spacing
-    st.markdown("<br>", unsafe_allow_html=True)  # Add some space
-    
-    col_send, col_clear, col_spacer = st.columns([2, 2, 6])
-    
-    with col_send:
-        send_button = st.button("🚀 Send", key="send_btn", type="primary", help="Ask your question", use_container_width=True)
-    
-    with col_clear:
-        clear_button = st.button("🗑️ Clear", key="clear_btn", type="secondary", help="Clear chat history", use_container_width=True)
-    
-    # Add custom CSS for beautiful buttons
-    st.markdown("""
-    <style>
-    /* Send Button - Beautiful gradient with hover effect */
-    div.stButton > button[data-testid="baseButton-primary"] {
-        background: linear-gradient(45deg, #667eea, #764ba2) !important;
-        color: white !important;
-        border: none !important;
-        border-radius: 12px !important;
-        padding: 12px 24px !important;
-        font-weight: 600 !important;
-        font-size: 16px !important;
-        letter-spacing: 0.5px !important;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        box-shadow: 0 4px 14px 0 rgba(102, 126, 234, 0.3) !important;
-        width: 100% !important;
-        min-height: 50px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }
-    
-    div.stButton > button[data-testid="baseButton-primary"]:hover {
-        background: linear-gradient(45deg, #5a6fd8, #6a42a0) !important;
-        transform: translateY(-2px) !important;
-        box-shadow: 0 6px 20px 0 rgba(102, 126, 234, 0.4) !important;
-    }
-    
-    div.stButton > button[data-testid="baseButton-primary"]:active {
-        transform: translateY(0px) !important;
-    }
-    
-    /* Clear Button - Elegant secondary style */
-    div.stButton > button[data-testid="baseButton-secondary"] {
-        background: linear-gradient(45deg, #f093fb, #f5576c) !important;
-        color: white !important;
-        border: none !important;
-        border-radius: 12px !important;
-        padding: 12px 24px !important;
-        font-weight: 600 !important;
-        font-size: 16px !important;
-        letter-spacing: 0.5px !important;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        box-shadow: 0 4px 14px 0 rgba(240, 147, 251, 0.3) !important;
-        width: 100% !important;
-        min-height: 50px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }
-    
-    div.stButton > button[data-testid="baseButton-secondary"]:hover {
-        background: linear-gradient(45deg, #e885f0, #e04863) !important;
-        transform: translateY(-2px) !important;
-        box-shadow: 0 6px 20px 0 rgba(240, 147, 251, 0.4) !important;
-    }
-    
-    div.stButton > button[data-testid="baseButton-secondary"]:active {
-        transform: translateY(0px) !important;
-    }
-    
-    /* Input Field - Modern styling */
-    div.stTextInput > div > div > input {
-        border-radius: 12px !important;
-        border: 2px solid #e1e5e9 !important;
-        padding: 14px 18px !important;
-        font-size: 16px !important;
-        transition: all 0.3s ease !important;
-        background-color: #fafbfc !important;
-    }
-    
-    div.stTextInput > div > div > input:focus {
-        border-color: #667eea !important;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
-        background-color: white !important;
-    }
-    
-    /* Button container spacing */
-    .element-container:has(button) {
-        margin-top: 20px !important;
-    }
-    
-    /* Add gap between buttons */
-    div[data-testid="column"]:has(button) {
-        padding: 0 8px !important;
-    }
-    
-    /* Hide Streamlit default styling */
-    .stButton {
-        margin-bottom: 0 !important;
-    }
-    
-    /* Chat container improvements */
-    .user-message, .ai-message {
-        margin-bottom: 16px !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-    
-    # Handle button clicks
-    if send_button and user_question:
-        with st.spinner("🧠 Thinking..."):
+    # Handle form submission (Enter key or button click)
+    if submitted and user_question:
+        with st.spinner("🧠 Analyzing your data..."):
             ai_response = st.session_state.chatbot.get_ai_response(user_question)
             st.session_state.chat_history.append({
                 "user": user_question,
@@ -899,73 +1255,44 @@ def chatbot_page():
             # Clear input by incrementing key
             st.session_state.input_key += 1
         st.rerun()
-    
-    if clear_button:
-        st.session_state.chat_history = []
-        st.session_state.input_key += 1
-        st.rerun()
 
 def home_page():
-    """Home page with navigation"""
+    """Enhanced home page with fresh design"""
     st.markdown("""
     <div class="main-header">
-        <h1>🧬 KRISPR Business Intelligence</h1>
-        <p>Your AI-powered business data analysis platform</p>
+        <h1>🌱 KRISPR Digital Analyst</h1>
+        <p>AI-powered insights for sustainable business growth</p>
     </div>
     """, unsafe_allow_html=True)
     
-    st.header("🚀 Welcome to KRISPR BI")
-    
-    # Check database status for home page
-    db_ready, db_message = st.session_state.chatbot.check_database_exists_and_ready()
-    
-    if db_ready:
-        st.markdown(f"""
-        <div class="success-box">
-            <strong>✅ System Status:</strong> {db_message}
-        </div>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown(f"""
-        <div class="info-box">
-            <strong>ℹ️ System Status:</strong> {db_message}
-        </div>
-        """, unsafe_allow_html=True)
-    
-    col1, col2 = st.columns(2)
+    # Two column layout for features
+    col1, col2 = st.columns(2, gap="large")
     
     with col1:
         st.markdown("""
-        ### 💬 Business Intelligence Chatbot
+        <div class="feature-card">
+            <div class="home-feature">
+                <h3>🤖 AI Business Analyst</h3>
+                <p>Get instant insights from your business data with natural language queries</p>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
         
-        Ask questions about your business data:
-        - "What is media units sold of Krispr Premium Rosemary, 40g in week 26?"
-        - "Which product has maximum sales?"
-        - "Show me trends by category"
-        - "Compare performance across weeks"
-        - "What is the CPA for specific products?"
-        
-        **Get instant, accurate insights from your data.**
-        """)
-        
-        if st.button("🚀 Go to Chatbot", use_container_width=True, type="primary"):
+        if st.button("Start Analysis", use_container_width=True, type="primary", key="chatbot_btn"):
             st.session_state.current_page = "chatbot"
             st.rerun()
     
     with col2:
         st.markdown("""
-        ### 👨‍💼 Admin Panel
+        <div class="feature-card">
+            <div class="home-feature">
+                <h3>📊 Data Management</h3>
+                <p>Upload and manage your business datasets securely</p>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
         
-        Administrative access for:
-        - Upload Excel files
-        - Manage business data
-        - Update datasets
-        - Configure system
-        
-        **Secure access for data management.**
-        """)
-        
-        if st.button("🔐 Admin Login", use_container_width=True):
+        if st.button("Admin Access", use_container_width=True, key="admin_btn"):
             st.session_state.current_page = "admin_login"
             st.rerun()
 
@@ -993,15 +1320,15 @@ def main():
         st.error("⚠️ OpenAI API key not found in secrets.toml")
         st.stop()
     
-    # Navigation
+    # Navigation in sidebar
     with st.sidebar:
-        st.header("🧭 Navigation")
+        st.markdown("<h2 style='color: #2e7d32; text-align: center; margin-bottom: 2rem;'>🧭 Navigation</h2>", unsafe_allow_html=True)
         
         if st.button("🏠 Home", use_container_width=True):
             st.session_state.current_page = "home"
             st.rerun()
         
-        if st.button("💬 Chatbot", use_container_width=True):
+        if st.button("🌱 AI Analyst", use_container_width=True):
             st.session_state.current_page = "chatbot"
             st.rerun()
         
@@ -1013,18 +1340,6 @@ def main():
             if st.button("🔐 Admin Login", use_container_width=True):
                 st.session_state.current_page = "admin_login"
                 st.rerun()
-        
-        # Show database status in sidebar
-        st.markdown("---")
-        st.subheader("📊 System Status")
-        db_ready, db_message = st.session_state.chatbot.check_database_exists_and_ready()
-        if db_ready:
-            st.success("✅ Database Ready")
-        else:
-            st.warning("⚠️ Database Not Ready")
-        
-        st.text(f"DB Path: {st.session_state.chatbot.db_path}")
-        st.text(f"Exists: {'Yes' if os.path.exists(st.session_state.chatbot.db_path) else 'No'}")
     
     # Route to appropriate page
     if st.session_state.current_page == "home":
