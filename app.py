@@ -765,11 +765,7 @@ class KrisprChatbot:
         try:
             # Handle simple greetings only (not data questions)
             question_lower = user_question.lower().strip()
-<<<<<<< HEAD
             simple_greetings = ['hi','salam', 'hello', 'hey']
-=======
-            simple_greetings = ['hi', 'hello', 'hey']
->>>>>>> de14ddd3feea13caa02016fbf129cac8fcec1bd6
             
             # Only respond with greeting if it's JUST a greeting, not a data question
             if question_lower in simple_greetings:
