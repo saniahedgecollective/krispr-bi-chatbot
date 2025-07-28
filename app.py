@@ -853,9 +853,21 @@ class KrisprChatbot:
             14. Group results by vendor/week/product as needed for breakdowns
             15. NEVER mention "SQLite", "database", or technical terms - just provide business insights
             
+            IMPORTANT SALES COMPARISON LOGIC:
+            For sales unit comparisons based on week numbers:
+            - For week 25 onwards (>= 25): Use invoiced/supplied units from the "overall sheet" or similar table containing invoiced data
+            - For weeks before 25 (< 25): Use total units sold from the "raw sales" or similar raw data table
+            
+            When user asks about sales comparison:
+            1. First identify the week numbers mentioned
+            2. If week >= 25: Look for columns like 'invoiced_units', 'supplied_units' in overall/summary tables
+            3. If week < 25: Look for columns like 'total_units_sold', 'units_sold' in raw sales tables
+            4. Use appropriate table and columns based on the week range
+            
             IMPORTANT COMPARISON EXAMPLES:
             - Media vs Organic: SELECT week, SUM(media_units_sold) as media, SUM(org_units_sold) as organic FROM table WHERE week = 25;
-            - Weekly Sales Comparison: SELECT week, SUM(units_sold) FROM table GROUP BY week ORDER BY week;
+            - Weekly Sales Comparison (week >= 25): SELECT week, SUM(invoiced_units) FROM overall_table WHERE week IN (27, 28) GROUP BY week;
+            - Weekly Sales Comparison (week < 25): SELECT week, SUM(total_units_sold) FROM raw_sales_table WHERE week IN (21, 22) GROUP BY week;
             - Product Performance: SELECT product, SUM(units_sold) FROM table WHERE week BETWEEN 20 AND 25 GROUP BY product;
             
             IMPORTANT: Format your query EXACTLY like this (no markdown, no code blocks):
